@@ -11,7 +11,7 @@ nlp.add_pipe("textrank")
 model = SentenceTransformer("pritamdeka/BioBERT-mnli-snli-scinli-scitail-mednli-stsb")
 count = 1
 
-
+# Prune article at first by getting top k sentences, then get final k sentences based on contextual embedding similarity
 def extract_and_rank(text, top_k, final_k):
     global count
     print(f"EXTRACTING - {count}.....")
