@@ -10,10 +10,8 @@ ds2 = load_dataset("BioLaySumm/BioLaySumm2025-eLife")
 output_dir1 = "biolaysumm_dataset/plos"
 output_dir2 = "biolaysumm_dataset/elife"
 
-# Export each split to local files (e.g., train, test)
 for split in ds1:
     ds1[split].to_csv(f"{output_dir1}/{split}.csv", index=False)
 
 for split in ds2:
     ds2[split].to_csv(f"{output_dir2}/{split}.csv", index=False)
-
