@@ -31,7 +31,7 @@ with open(input_file, newline='', encoding='utf-8') as infile:
 
 # print averages
 if count > 0:
-    print("\n📊 Average readability scores:")
+    print("\nAverage readability scores:")
     print(f"Flesch-Kincaid Grade: {round(fk_total / count, 2)}")
     print(f"Dale-Chall Score: {round(dc_total / count, 2)}")
     print(f"Coleman-Liau Index: {round(cl_total / count, 2)}")
