@@ -4,15 +4,7 @@ from config.data import Dataset
 
 
 def load_data(split, dataset: Dataset):
-    try:
-        ds = datasets.load_dataset(f"BioLaySumm/BioLaySumm2025-{dataset}", split=split)
-    except ValueError as e:
-        if "trust_remote_code" in str(e):
-            raise ValueError(
-                "Loading Samsung/samsum requires you to execute the dataset script in that repo on your local machine. Make sure you have read the code there to avoid malicious use, then set HF_DATASETS_TRUST_REMOTE_CODE env variable to True.") from e
-        else:
-            raise e
-    return ds
+    return datasets.load_dataset(f"BioLaySumm/BioLaySumm2025-{dataset}", split=split)
 
 
 def get_data(dataset_config, tokenizer, split):
