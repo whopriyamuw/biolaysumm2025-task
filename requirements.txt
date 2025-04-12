@@ -1,0 +1,9 @@
+pandas~=2.2.3
+datasets~=3.5.0
+torch~=2.6.0
+transformers~=4.51.2
+nltk~=3.9.1
+sentence-transformers~=4.0.2
+peft~=0.15.1
+spacy~=3.8.2
+llama_cookbook
