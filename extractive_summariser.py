@@ -1,15 +1,31 @@
+"""Script to perform extractive summarization"""
+import sys
+import time
 import pandas as pd
 import spacy
 import pytextrank
+import torch
 from sentence_transformers import SentenceTransformer, util
+
+device_available = "cuda" if torch.cuda.is_available() else "cpu"
+print("DEVICE AVAILABLE? - ", str(device_available))
 
 # Load spacy + pytextrank
 nlp = spacy.load("en_core_web_sm")
 nlp.add_pipe("textrank")
 
 # Load BioBERT sentence transformer
-model = SentenceTransformer("pritamdeka/BioBERT-mnli-snli-scinli-scitail-mednli-stsb")
+"""
+Models to be used:
+1. microsoft/BiomedNLP-BiomedBERT-base-uncased-abstract-fulltext
+2. pritamdeka/BioBERT-mnli-snli-scinli-scitail-mednli-stsb
+"""
+model = SentenceTransformer(
+    "microsoft/BiomedNLP-BiomedBERT-base-uncased-abstract-fulltext",
+    device=device_available,
+)
 count = 1
+
 
 # Prune article at first by getting top k sentences, then get final k sentences based on contextual embedding similarity
 def extract_and_rank(text, top_k, final_k):
@@ -45,10 +61,16 @@ df = pd.read_csv("biolaysumm_dataset/elife/train_processed.csv")
 
 print(len(df))
 
+t1 = time.time()
+
 df["extracted_summary"] = df["article"].apply(
     lambda x: extract_and_rank(x, top_k=80, final_k=20)
 )
 
-df.to_csv("biolaysumm_dataset/elife/train_extracted.csv", index=False)
+print(f"Time taken to extract: {time.time() - t1} seconds")
 
-print(df[["article", "extracted_summary"]].head())
+df.to_csv(
+    "biolaysumm_dataset/summaries/extracted/train_elife_BioMedNLP.csv", index=False
+)
+
+print(df[["article", "extracted_summary"]].head(5))
