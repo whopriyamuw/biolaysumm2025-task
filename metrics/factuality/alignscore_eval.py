@@ -19,8 +19,7 @@ score = scorer.score(contexts=["This is a test"], claims=["A test is being run"]
 print(f"Score is - {score}")
 
 """
-# Script to apply the score on a dataset
-
+# Script to apply the score on
 import pandas as pd
 
 data = pd.read_csv("data.csv")
@@ -30,7 +29,7 @@ df['score'] = df.apply(
     lambda row: scorer.score(
         contexts=[row['system summary']],
         claims=[row['gold summary']],
-    )['score'],
+    ),
     axis=1
 )
 
