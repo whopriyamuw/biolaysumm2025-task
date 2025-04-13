@@ -17,11 +17,14 @@ nlp.add_pipe("textrank")
 # Load BioBERT sentence transformer
 """
 Models to be used:
-1. microsoft/BiomedNLP-BiomedBERT-base-uncased-abstract-fulltext
+1. pritamdeka/S-PubMedBert-MS-MARCO
 2. pritamdeka/BioBERT-mnli-snli-scinli-scitail-mednli-stsb
+3. NeuML/pubmedbert-base-embeddings
+4. abhinand/MedEmbed-large-v0.1
+5. Manal0809/medical-term-similarity
 """
 model = SentenceTransformer(
-    "microsoft/BiomedNLP-BiomedBERT-base-uncased-abstract-fulltext",
+    "abhinand/MedEmbed-large-v0.1",
     device=device_available,
 )
 count = 1
@@ -70,7 +73,7 @@ df["extracted_summary"] = df["article"].apply(
 print(f"Time taken to extract: {time.time() - t1} seconds")
 
 df.to_csv(
-    "biolaysumm_dataset/summaries/extracted/train_elife_BioMedNLP.csv", index=False
+    "biolaysumm_dataset/summaries/extracted/train_elife_MedEmbed-large.csv", index=False
 )
 
 print(df[["article", "extracted_summary"]].head(5))
