@@ -57,6 +57,7 @@ dataset:
   column_map:
     input: article
     output: summary
+  new_system_prompt: Summarize the following article.
   packed: False  # True increases speed
 seed: null
 shuffle: True
