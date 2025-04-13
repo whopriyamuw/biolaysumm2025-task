@@ -52,7 +52,8 @@ save_adapter_weights_only: False
 # Dataset and Sampler
 dataset:
   _component_: torchtune.datasets.samsum_dataset
-  source: BioLaySumm/BioLaySumm2025-PLOS
+#  source: BioLaySumm/BioLaySumm2025-PLOS
+  source: josecols/biolaysumm
   column_map:
     input: article
     output: summary
