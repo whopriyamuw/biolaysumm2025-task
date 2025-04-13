@@ -51,11 +51,15 @@ save_adapter_weights_only: False
 
 # Dataset and Sampler
 dataset:
-  _component_: torchtune.datasets.alpaca_cleaned_dataset
+  _component_: torchtune.datasets.samsum_dataset
+  source: BioLaySumm/BioLaySumm2025-PLOS
+  column_map:
+    input: article
+    output: summary
   packed: False  # True increases speed
 seed: null
 shuffle: True
-batch_size: 2
+batch_size: 1
 
 # Optimizer and Scheduler
 optimizer:
@@ -79,10 +83,11 @@ compile: False  # torch.compile the model + loss, True increases speed + decreas
 
 # Logging
 metric_logger:
-  _component_: torchtune.training.metric_logging.DiskLogger
-  log_dir: ${output_dir}/logs
-log_every_n_steps: 1
-log_peak_memory_stats: True
+  _component_: torchtune.training.metric_logging.WandBLogger
+  project: suwmit
+  group: suwmit
+  job_type: lora_finetune_single_device
+log_every_n_steps: 5
 
 # Environment
 device: cuda
