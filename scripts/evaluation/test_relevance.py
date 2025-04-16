@@ -40,9 +40,9 @@ class TestRelevanceMetrics(unittest.TestCase):
         df.to_csv(self.sys_output_file.name, index=False)
 
         command_args = [
+            self.sys_output_file.name,
             "elife",
             "validation",
-            self.sys_output_file.name,
         ]
         exit_code, output = self.run_script(command_args)
         self.assertEqual(exit_code, 0)
