@@ -9,7 +9,7 @@ from unittest.mock import patch
 import pandas as pd
 from datasets import load_dataset
 
-import relevance
+import relevance_eval
 
 
 class TestRelevanceMetrics(unittest.TestCase):
@@ -26,7 +26,7 @@ class TestRelevanceMetrics(unittest.TestCase):
     def run_script(command_args):
         with (patch("sys.stdout", new_callable=StringIO) as buff,):
             try:
-                relevance.main(*command_args)
+                relevance_eval.main(*command_args)
             except SystemExit as e:
                 exit_code = e.code
             else:
@@ -35,7 +35,7 @@ class TestRelevanceMetrics(unittest.TestCase):
             return exit_code, output
 
     def test_gold_summary(self):
-        dataset = load_dataset(relevance.Datasets.elife.value, split="validation")
+        dataset = load_dataset(relevance_eval.Datasets.elife.value, split="validation")
         df = pd.DataFrame({"summary": dataset["summary"]})
         df.to_csv(self.sys_output_file.name, index=False)
 
