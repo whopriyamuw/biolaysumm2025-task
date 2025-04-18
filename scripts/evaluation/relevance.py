@@ -1,7 +1,7 @@
 import argparse
 import enum
 import json
-import sys
+import os
 
 import evaluate
 import pandas as pd
@@ -10,6 +10,9 @@ from datasets import load_dataset
 from torch.nn.functional import cosine_similarity
 
 SUPPORTED_METRICS = {"sacrebleu", "rouge", "bertscore", "comet", "gritlm"}
+PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
+EVALS_DIR = os.path.join(PROJECT_ROOT, "evals")
+DATASETS_DIR = os.path.join(PROJECT_ROOT, "data", "interim")
 
 
 class Datasets(enum.Enum):
@@ -77,7 +80,10 @@ def main(
 ) -> None:
     dataset_id = Datasets[dataset_name].value
     dataset = load_dataset(dataset_id, split=split)
-    predictions_df = pd.read_csv(system_output_filename)
+
+    dataset_filename = os.path.join(DATASETS_DIR, system_output_filename)
+    predictions_df = pd.read_csv(dataset_filename)
+
     metric_kwargs = {
         "bertscore": {"lang": "en"},
         "comet": {
@@ -90,17 +96,19 @@ def main(
         },
     }
 
-    assert len(dataset["article"]) == len(predictions_df["summary"])
+    assert len(dataset["article"]) == len(predictions_df["extracted_summary"])
 
     results = relevance_eval(
         # Most metrics expect multiple references per sample.
         [s for s in dataset["summary"]],
-        predictions_df["summary"],
+        predictions_df["extracted_summary"],
         metrics,
         metric_kwargs,
     )
 
-    json.dump(results, sys.stdout, indent=4)
+    filename = system_output_filename.split(".")[0]
+    with open(os.path.join(EVALS_DIR, "relevance", f"{filename}.json"), "w") as f:
+        json.dump(results, f)
 
 
 if __name__ == "__main__":
