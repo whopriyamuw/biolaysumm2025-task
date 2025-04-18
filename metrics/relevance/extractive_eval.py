@@ -2,17 +2,17 @@ import os
 
 from datasets import load_dataset
 
-from relevance import SUPPORTED_METRICS, DATASETS_DIR
-from relevance import main as relevance_scores
+from relevance_eval import SUPPORTED_METRICS, DATASETS_DIR
+from relevance_eval import main as relevance_scores
 
 
 EXTRACTIVE_LENGTHS = {20, 30, 40}
 EXTRACTIVE_METHODS = {
     "BioBERT",
-    "MedEmbed-large",
-    "S-PubMedBert-MS-MARCO",
-    "medical-term-similarity",
-    # "pubmedbert-base.csv", # FIXME: Uncomment once @Priyam updates HF dataset.
+    "MedEmbed_large",
+    "S_PubMedBert_MS_MARCO",
+    "medical_term_similarity",
+    "pubmedbert_base.csv",
 }
 
 
