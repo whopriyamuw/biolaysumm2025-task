@@ -9,10 +9,10 @@ from relevance_eval import main as relevance_scores
 EXTRACTIVE_LENGTHS = {20, 30, 40}
 EXTRACTIVE_METHODS = {
     "BioBERT",
-    "MedEmbed_large",
-    "S_PubMedBert_MS_MARCO",
-    "medical_term_similarity",
-    "pubmedbert_base.csv",
+    "MedEmbed-large",
+    "S-PubMedBert-MS-MARCO",
+    "medical-term-similarity",
+    "pubmedbert_base",
 }
 
 
