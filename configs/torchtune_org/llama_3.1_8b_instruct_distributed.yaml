@@ -1,19 +1,21 @@
-# Config for single device LoRA finetuning in lora_finetune_single_device.py
+# Config for multi-device LoRA finetuning in lora_finetune_distributed.py
 # using a Llama3.1 8B Instruct model
 #
 # This config assumes that you've run the following command before launching
 # this run:
 #   tune download meta-llama/Meta-Llama-3.1-8B-Instruct --output-dir <YOUR_CHECKPOINT_DIR> --ignore-patterns "original/consolidated.00.pth"
 #
-# To launch on a single device, run the following command from root:
-#   tune run lora_finetune_single_device --config llama_3.1_8b_instruct_single.yaml
+# To launch on 2 devices, run the following command from root:
+#   tune run --nproc_per_node 2 lora_finetune_distributed --config llama_3.1_8b_instruct_distributed.yaml
 #
 # You can add specific overrides through the command line. For example
 # to override the checkpointer directory while launching training
 # you can run:
-#   tune run lora_finetune_single_device --config llama_3.1_8b_instruct_single.yaml checkpointer.checkpoint_dir=<YOUR_CHECKPOINT_DIR>
+#   tune run --nproc_per_node 2 lora_finetune_distributed --config llama_3.1_8b_instruct_distributed.yaml checkpointer.checkpoint_dir=<YOUR_CHECKPOINT_DIR>
 #
-# This config works only for training on single device.
+# This config works best when the model is being fine-tuned on 2+ GPUs.
+# For single device LoRA finetuning please use llama_3.1_8b_instruct_single.yaml
+# or 8B_qlora_single_device.yaml
 
 checkpoint_dir: null  # Should match the directory you used when downloading the model
 output_dir: null
@@ -43,13 +45,14 @@ checkpointer:
   recipe_checkpoint: null
   output_dir: ${output_dir}
   model_type: LLAMA3
+resume_from_checkpoint: False  # Set to True to resume training
 should_load_recipe_state: False  # Set to True to resume training
 save_adapter_weights_only: False  # Saves disk space when set to True, but might have to handle the adapters separately for inference
 
 # Dataset and Sampler
 dataset:
   _component_: torchtune.datasets.samsum_dataset
-  source: "csv"  # Use local file instead of downloading from Hugging Face
+  source: whopriyam2/SUWMIT-dataset  # Use "csv" to use a local file instead of downloading from Hugging Face
   data_files: null  # Path to dataset
   column_map:
     input: article
@@ -86,7 +89,7 @@ metric_logger:
   _component_: torchtune.training.metric_logging.WandBLogger
   project: suwmit
   group: suwmit
-  job_type: lora_finetune_single_device
+  job_type: lora_finetune_multi_device
 log_every_n_steps: 5
 
 # Environment
