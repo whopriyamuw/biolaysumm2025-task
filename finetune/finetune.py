@@ -62,7 +62,7 @@ def download_model(model: str = MODEL, hf_token: Optional[str] = None) -> None:
 
     # Download the model if it doesn't exist.
     if not os.path.exists(model_path):
-        logger.info(f"Downloading model to: {model_path}")
+        logger.info(f"Downloading {model} model to: {model_path}")
         logger.info(f"This may take a while.")
 
         cmd = [
@@ -154,6 +154,7 @@ def get_gpus() -> tuple[int, str]:
         gpu_model = re.search(rf"{'|'.join(GPU_SPEED.keys())}", gpu_name)
 
         if not gpu_model:
+            logger.Error(f"Currently supported GPUs: {', '.join(GPU_SPEED.keys())}")
             raise ValueError(f"Unrecognized GPU: {gpu_name}")
 
         return torch.cuda.device_count(), gpu_model.group(0)
@@ -205,12 +206,12 @@ def create_config(output_dir: str, data_files: str, split_begin: int, split_end:
     # Update the default config with the modifications
     new_config = update_config(default_config, modifications)
 
-    logger.debug(f"Default config:\n"
-                 f"{pformat(default_config)}")
-    logger.debug(f"Changes:\n"
-                 f"{pformat(modifications)}")
-    logger.debug(f"New config:\n"
-                 f"{pformat(new_config)}")
+    logger.debug(f"\n##### Default Config #####\n"
+                 f"{pformat(default_config)}\n\n")
+    logger.debug(f"\n##### Changes #####\n"
+                 f"{pformat(modifications)}\n\n")
+    logger.debug(f"\n##### New Config #####\n"
+                 f"{pformat(new_config)}\n\n")
 
     new_config_dir = os.path.join(CONFIG_DIR, "torchtune_run")
     new_config_file = CONFIG_FILE.format(f"{device_setup}_{datetime.now().strftime('%Y%m%d_%H%M%S')}")
