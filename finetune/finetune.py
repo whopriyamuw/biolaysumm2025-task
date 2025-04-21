@@ -224,12 +224,11 @@ def create_config(output_dir: str, data_files: str, split_begin: int, split_end:
 
 
 def _finetune(config_path: str, gpu_count: int = 1) -> None:
-    cmd = [
-        "tune", "run",
-        "lora_finetune_distributed" if gpu_count > 1 else "lora_finetune_single_device",
-        f"--nproc_per_node {gpu_count}" if gpu_count > 1 else "",
-        "--config", config_path,
-    ]
+    cmd = (["tune", "run"] +
+           (["--nproc_per_node", str(gpu_count)] if gpu_count > 1 else []) +
+           (["lora_finetune_distributed"] if gpu_count > 1 else ["lora_finetune_single_device"]) +
+           ["--config", config_path])
+
     logger.info(f"Running command: {' '.join(cmd)}")
     subprocess.run(cmd, check=True)
 
