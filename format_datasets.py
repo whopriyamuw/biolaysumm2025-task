@@ -19,6 +19,7 @@ EXTRACTIVE_METHODS = {
 def download_dataset(filename: str, split: str) -> None:
     original_filename = filename.split(".")[0]
     processed_filename = os.path.join(PROCESSED_DIR, f"{original_filename}.json")
+    sampled_filename = os.path.join(PROCESSED_DIR, f"{original_filename}.csv")
 
     if os.path.exists(processed_filename):
         return
@@ -26,8 +27,16 @@ def download_dataset(filename: str, split: str) -> None:
     dataset = load_dataset(
         "whopriyam2/SUWMIT-dataset", data_files=filename, split=split
     )
-    sampled = dataset.shuffle(seed=1704).select(range(100))
-    os.makedirs(os.path.dirname(processed_filename), exist_ok=True)
+    dataset = dataset.map(
+        lambda sample, i: {"row": i},
+        with_indices=True,
+    )
+    sampled = (
+        dataset.shuffle(seed=1704)
+        .select(range(100))
+        .select_columns(["row", "article", "summary", "extracted_summary"])
+    )
+    sampled.to_csv(sampled_filename, index=False)
 
     data = [
         {
@@ -38,6 +47,7 @@ def download_dataset(filename: str, split: str) -> None:
         for r in sampled
     ]
 
+    os.makedirs(os.path.dirname(processed_filename), exist_ok=True)
     with open(processed_filename, "w") as f:
         json.dump(data, f)
 
