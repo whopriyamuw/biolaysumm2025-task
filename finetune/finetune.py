@@ -290,6 +290,8 @@ def main():
     # Optional arguments
     parser.add_argument('--epochs', type=int, default=1,
                         help='Epochs to train the model (default: 1)')
+    parser.add_argument('--data-split', type=float, default=-1,
+                        help='Data split for training (default: -1, auto-calculated based on GPU model and number)')
     parser.add_argument('--input', type=str, default='article',
                         help='Input column for the model (default: article)')
     parser.add_argument('--output', type=str, default='summary',
@@ -302,7 +304,7 @@ def main():
 
     tuner = ModelTuner()
     tuner.set_logger_level(args.log_level)
-    tuner.finetune(args.dataset, args.epochs)
+    tuner.finetune(args.dataset, args.epochs, args.data_split)
 
 
 if __name__ == "__main__":
