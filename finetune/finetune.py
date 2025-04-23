@@ -290,6 +290,10 @@ def main():
     # Optional arguments
     parser.add_argument('--epochs', type=int, default=1,
                         help='Epochs to train the model (default: 1)')
+    parser.add_argument('--input', type=str, default='article',
+                        help='Input column for the model (default: article)')
+    parser.add_argument('--output', type=str, default='summary',
+                        help='Target output column for the model (default: summary)')
     parser.add_argument('--log-level', type=str, default='INFO',
                         choices=['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'],
                         help='Set logging level (default: INFO)')
