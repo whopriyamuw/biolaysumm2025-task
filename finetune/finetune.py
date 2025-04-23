@@ -191,7 +191,7 @@ class ModelTuner:
 
     @classmethod
     def create_config(cls, output_dir: str, data_files: str, split_begin: int, split_end: int, epochs: int = 1,
-                      resume: bool = False) -> str:
+                      input: Optional[str] = None, output: Optional[str] = None, resume: bool = False) -> str:
         """
         Creates a new config file for the fine-tuning process.
         Parameters:
@@ -211,6 +211,10 @@ class ModelTuner:
             'output_dir': output_dir,
             'dataset': {
                 'data_files': data_files,
+                'column_map': {
+                    'input': input or 'article',
+                    'output': output or 'summary'
+                },
                 'split': f"train[{split_begin}%:{split_end}%]",
             },
             'resume_from_checkpoint': resume,
@@ -247,7 +251,18 @@ class ModelTuner:
         cls._logger.info(f"Running command: {' '.join(cmd)}")
         subprocess.run(cmd, check=True)
 
-    def finetune(self, data_files: str, epochs: int = 1, data_split: float = -1) -> None:
+    def finetune(self, data_files: str, epochs: int = 1, data_split: float = -1,
+                 input: Optional[str] = None, output: Optional[str] = None) -> None:
+        """
+        Fine-tunes the model with the specified parameters.
+
+        Parameters:
+            data_files: Path to the dataset file for fine-tuning.
+            epochs: Number of epochs to train the model.
+            data_split: Data split for training.
+            input: Input column for the model.
+            output: Target output column for the model.
+        """
         self.download_model(self._model, self._hf_token)
 
         dataset_name = data_files.replace("/", "_").replace("\\", "_").rsplit(".", maxsplit=1)[0]
@@ -274,7 +289,7 @@ class ModelTuner:
 
         # Create a new config for fine-tuning
         new_config_path = self.create_config(output_dir, data_files, split_begin, split_end, epochs_needed,
-                                             resume=bool(epochs_trained))
+                                             input, output, resume=bool(epochs_trained))
 
         # Fine-tune the model
         self._finetune(new_config_path)
@@ -304,7 +319,7 @@ def main():
 
     tuner = ModelTuner()
     tuner.set_logger_level(args.log_level)
-    tuner.finetune(args.dataset, args.epochs, args.data_split)
+    tuner.finetune(args.dataset, args.epochs, args.data_split, args.input, args.output)
 
 
 if __name__ == "__main__":
