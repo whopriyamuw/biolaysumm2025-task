@@ -45,7 +45,7 @@ checkpointer:
   model_type: LLAMA3
 resume_from_checkpoint: False  # Set to True to resume training
 should_load_recipe_state: False  # Set to True to resume training
-save_adapter_weights_only: False  # Saves disk space when set to True, but might have to handle the adapters separately for inference
+save_adapter_weights_only: True  # Saves disk space when set to True, but might have to handle the adapters separately for inference
 
 # Dataset and Sampler
 dataset:
