@@ -99,7 +99,7 @@ def finetune(data_files: str, epochs: int = 1):
     split_begin, split_end = mod(gpu_speed * epochs_trained * 100), mod(gpu_speed * (epochs_trained + 1) * 100, True)
     log_config(split_begin, split_end)
 
-    # Create config and fine-tune
+    # Create a new config for fine-tuning
     new_config_path = create_config(output_dir, data_files, split_begin, split_end, epochs_needed, device_setup,
                                     resume=bool(epochs_trained))
 
