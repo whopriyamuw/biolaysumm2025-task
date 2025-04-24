@@ -300,9 +300,8 @@ class ModelTuner:
             self._logger.info("Terminating fine-tuning process after 1 epoch.")
             time.sleep(5)
             process.terminate()
-        else:
-            self._logger.info(f"Model already trained for {epochs_trained}/{epochs_needed} epochs. Exiting...")
-            return
+
+        self._logger.info(f"Model already trained for {epochs_trained}/{epochs_needed} epochs. Exiting...")
 
 
 def main():
