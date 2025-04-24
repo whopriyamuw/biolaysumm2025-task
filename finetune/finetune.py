@@ -230,6 +230,7 @@ class ModelTuner:
         cls._logger.debug(f"\n##### New Config #####\n"
                           f"{pformat(new_config)}\n\n")
 
+        # Save the new config to a file
         new_config_dir = os.path.join(CONFIG_DIR, "torchtune_run")
         new_config_file = CONFIG_FILE.format(f"{cls._device_setup}_{datetime.now().strftime('%Y%m%d_%H%M%S')}")
         new_config_path = os.path.join(new_config_dir, new_config_file)
