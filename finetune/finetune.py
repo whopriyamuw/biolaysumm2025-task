@@ -227,7 +227,7 @@ class ModelTuner:
         return new_config_path
 
     @classmethod
-    def _finetune(cls, config_path: str) -> None:
+    def _run_torchtune(cls, config_path: str) -> None:
         cmd = (["tune", "run"] +
                (["--nproc_per_node", str(cls._gpu_count)] if cls._gpu_count > 1 else []) +
                (["lora_finetune_distributed"] if cls._gpu_count > 1 else ["lora_finetune_single_device"]) +
@@ -279,7 +279,7 @@ class ModelTuner:
                                              input, output, resume=bool(epochs_trained))
 
         # Fine-tune the model
-        self._finetune(new_config_path)
+        self._run_torchtune(new_config_path)
 
 
 def main():
