@@ -2,18 +2,19 @@
 Script for fine-tuning LLaMa 3.1 8B Instruct model.
 """
 import argparse
-import collections
 import copy
 import logging
 import os
 import re
 import subprocess
-import sys
+import time
+from collections.abc import Mapping
 from datetime import datetime
 from math import ceil
 from pprint import pformat
 from typing import Optional, Union
 
+import torch
 import yaml
 
 from paths import MODEL, MODEL_DIR, CONFIG_FILE, CONFIG_DIR
@@ -31,7 +32,7 @@ def update_config(original: dict, updates: dict) -> dict:
         dict: Updated config dictionary. This is the same instance as original.
     """
     for key, value in updates.items():
-        if isinstance(value, collections.abc.Mapping) and key in original:
+        if isinstance(value, Mapping) and key in original:
             original[key] = update_config(original.get(key, {}), value)
         else:
             original[key] = value
@@ -42,18 +43,6 @@ class ModelTuner:
     GPU_SPEED = {'A40': 0.25, 'A100': 1}  # Epochs per 8 hours
     _logger = None
 
-    def __new__(cls, *args, **kwargs):
-        if cls._logger is None:
-            # Set up logger
-            cls._logger = cls._setup_logger()
-            cls.set_logger_level(logging.INFO)
-
-            # Get device setup
-            cls._gpu_count, cls._gpu_model = cls.get_gpus()
-            cls._device_setup = "single" if cls._gpu_count == 1 else "distributed"
-
-        return super().__new__(cls)
-
     def __init__(self, model: str = MODEL, hf_token: Optional[str] = None):
         """
         Initializes the ModelTuner class.
@@ -62,6 +51,7 @@ class ModelTuner:
             model: Model to fine-tune.
             hf_token: Hugging Face token for authentication. Searches environment variables if not provided.
         """
+        self._initialize_class_attributes()
         self._model = model
         self._hf_token = hf_token
 
@@ -99,6 +89,17 @@ class ModelTuner:
         return logger
 
     @classmethod
+    def _initialize_class_attributes(cls):
+        if cls._logger is None:
+            # Set up logger
+            cls._logger = cls._setup_logger()
+            cls.set_logger_level(logging.INFO)
+
+            # Get device setup
+            cls._gpu_count, cls._gpu_model = cls.get_gpus()
+            cls._device_setup = "single" if cls._gpu_count == 1 else "distributed"
+
+    @classmethod
     def set_logger_level(cls, level: Union[str, int] = logging.INFO) -> None:
         """
         Sets logging level for the class logger.
@@ -123,6 +124,20 @@ class ModelTuner:
 
         return max(epochs)
 
+    @staticmethod
+    def is_epoch_completed(output_dir: str, epoch: int) -> bool:
+        """
+        Checks if the specified epoch has been completed.
+
+        Parameters:
+            output_dir: Directory where the model is saved.
+            epoch: Epoch number to check.
+
+        Returns:
+            bool: True if the epoch has been completed, False otherwise.
+        """
+        return os.path.exists(os.path.join(output_dir, f"epoch_{epoch}", "original"))
+
     @classmethod
     def get_gpus(cls) -> tuple[int, str]:
         """
@@ -132,14 +147,12 @@ class ModelTuner:
         Returns:
             (gpu_count, gpu_model): A tuple containing the number of GPUs and their model name.
         """
-        import torch
-
         if torch.cuda.is_available():
             gpu_name = torch.cuda.get_device_name(0)
             gpu_model = re.search(rf"{'|'.join(cls.GPU_SPEED.keys())}", gpu_name)
 
             if not gpu_model:
-                cls._logger.Error(f"Currently supported GPUs: {', '.join(cls.GPU_SPEED.keys())}")
+                cls._logger.error(f"Currently supported GPUs: {', '.join(cls.GPU_SPEED.keys())}")
                 raise ValueError(f"Unrecognized GPU: {gpu_name}")
 
             return torch.cuda.device_count(), gpu_model.group(0)
@@ -227,14 +240,14 @@ class ModelTuner:
         return new_config_path
 
     @classmethod
-    def _run_torchtune(cls, config_path: str) -> None:
+    def _run_torchtune(cls, config_path: str) -> subprocess.Popen:
         cmd = (["tune", "run"] +
                (["--nproc_per_node", str(cls._gpu_count)] if cls._gpu_count > 1 else []) +
                (["lora_finetune_distributed"] if cls._gpu_count > 1 else ["lora_finetune_single_device"]) +
                ["--config", config_path])
 
         cls._logger.info(f"Running command: {' '.join(cmd)}")
-        subprocess.run(cmd, check=True)
+        return subprocess.Popen(cmd)
 
     def finetune(self, data_files: str, epochs: int = 1, data_split: float = -1,
                  input: Optional[str] = None, output: Optional[str] = None) -> None:
@@ -266,20 +279,30 @@ class ModelTuner:
                            f"{epochs_needed = }\n"
                            f"{epochs_trained = }\n")
 
-        if epochs_needed <= epochs_trained:
+        while (epochs_trained := self.get_epochs_trained(output_dir)) < epochs_needed:
+            self._logger.info(f"\nEpoch: {epochs_trained}/{epochs_needed}")
+
+            # Calculate dataset split
+            split_begin = int(epochs_trained % split_epochs * data_split * 100)
+            split_end = int(min(split_begin + data_split * 100, 100))
+
+            # Create a new config for fine-tuning
+            new_config_path = self.create_config(output_dir, data_files, split_begin, split_end, epochs_needed,
+                                                 input, output, resume=bool(epochs_trained))
+
+            # Fine-tune the model
+            process = self._run_torchtune(new_config_path)
+
+            # Wait for the epoch to finish
+            while not self.is_epoch_completed(output_dir, epochs_trained):
+                time.sleep(30)
+
+            self._logger.info("Terminating fine-tuning process after 1 epoch.")
+            time.sleep(5)
+            process.terminate()
+        else:
             self._logger.info(f"Model already trained for {epochs_trained}/{epochs_needed} epochs. Exiting...")
-            sys.exit()
-
-        # Calculate dataset split
-        split_begin = int(epochs_trained % split_epochs * data_split * 100)
-        split_end = int(min(split_begin + data_split * 100, 100))
-
-        # Create a new config for fine-tuning
-        new_config_path = self.create_config(output_dir, data_files, split_begin, split_end, epochs_needed,
-                                             input, output, resume=bool(epochs_trained))
-
-        # Fine-tune the model
-        self._run_torchtune(new_config_path)
+            return
 
 
 def main():
