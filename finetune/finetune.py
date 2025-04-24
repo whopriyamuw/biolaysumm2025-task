@@ -271,8 +271,8 @@ class ModelTuner:
             sys.exit()
 
         # Calculate dataset split
-        split_begin = epochs_trained % split_epochs * data_split * 100
-        split_end = min(split_begin + data_split * 100, 100)
+        split_begin = int(epochs_trained % split_epochs * data_split * 100)
+        split_end = int(min(split_begin + data_split * 100, 100))
 
         # Create a new config for fine-tuning
         new_config_path = self.create_config(output_dir, data_files, split_begin, split_end, epochs_needed,
