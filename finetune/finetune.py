@@ -10,6 +10,7 @@ import re
 import subprocess
 import sys
 from datetime import datetime
+from math import ceil
 from pprint import pformat
 from typing import Optional, Union
 
@@ -108,22 +109,6 @@ class ModelTuner:
         cls._logger.setLevel(level)
         for handler in cls._logger.handlers:
             handler.setLevel(level)
-
-    @staticmethod
-    def mod(x: int, end: bool = False) -> int:
-        """
-        Returns the modulus of x with respect to 100.
-
-        Parameters:
-            x: The value to be modded.
-            end: If True, returns 100 if x % 100 is 0.
-
-        Returns:
-            int: The modulus of x with respect to 100.
-        """
-        if end and x % 100 == 0:
-            return 100
-        return int(x % 100)
 
     @staticmethod
     def get_epochs_trained(output_dir: str) -> int:
@@ -268,14 +253,16 @@ class ModelTuner:
         dataset_name = data_files.replace("/", "_").replace("\\", "_").rsplit(".", maxsplit=1)[0]
         output_dir = os.path.join(MODEL_DIR, f"finetuned_{dataset_name}")
 
-        # Calculate epochs
+        # Adjust epochs based on data_split
         data_split = self.GPU_SPEED.get(self._gpu_model, 1) * self._gpu_count if data_split == -1 else data_split
-        epochs_needed = int(max(epochs / data_split, epochs))  # Adjust epochs based on the GPU model
+        split_epochs = ceil(1 / data_split)  # Each split becomes an epoch
+        epochs_needed = max(split_epochs * epochs, epochs)
         epochs_trained = self.get_epochs_trained(output_dir)
 
         self._logger.debug(f"\n"
                            f"{self.gpu_count = }\n"
                            f"{self.gpu_model = }\n"
+                           f"{data_split = }\n"
                            f"{epochs_needed = }\n"
                            f"{epochs_trained = }\n")
 
@@ -284,8 +271,8 @@ class ModelTuner:
             sys.exit()
 
         # Calculate dataset split
-        split_begin, split_end = (self.mod(data_split * epochs_trained * 100),
-                                  self.mod(data_split * (epochs_trained + 1) * 100, True))
+        split_begin = epochs_trained % split_epochs * data_split * 100
+        split_end = min(split_begin + data_split * 100, 100)
 
         # Create a new config for fine-tuning
         new_config_path = self.create_config(output_dir, data_files, split_begin, split_end, epochs_needed,
