@@ -1,0 +1,129 @@
+# Config for multi-device LoRA finetuning in lora_finetune_distributed.py
+# using a Llama3.1 8B Instruct model
+#
+# This config assumes that you've run the following command before launching
+# this run:
+#   tune download meta-llama/Meta-Llama-3.1-8B-Instruct --output-dir <YOUR_CHECKPOINT_DIR> --ignore-patterns "original/consolidated.00.pth"
+#
+# To launch on 2 devices, run the following command from root:
+#   tune run --nproc_per_node 2 lora_finetune_distributed --config llama_3.1_8b_instruct_distributed.yaml
+#
+# You can add specific overrides through the command line. For example
+# to override the checkpointer directory while launching training
+# you can run:
+#   tune run --nproc_per_node 2 lora_finetune_distributed --config llama_3.1_8b_instruct_distributed.yaml checkpointer.checkpoint_dir=<YOUR_CHECKPOINT_DIR>
+#
+# This config works best when the model is being fine-tuned on 2+ GPUs.
+# For single device LoRA finetuning please use llama_3.1_8b_instruct_single.yaml
+# or 8B_qlora_single_device.yaml
+
+checkpoint_dir: null  # Should match the directory you used when downloading the model
+output_dir: null
+
+# Tokenizer
+tokenizer:
+  _component_: torchtune.models.llama3.llama3_tokenizer
+  path: ${checkpoint_dir}/original/tokenizer.model
+  max_seq_len: null
+
+# Model Arguments
+model:
+  _component_: torchtune.models.llama3_1.lora_llama3_1_8b
+  lora_attn_modules: [ 'q_proj', 'v_proj', 'output_proj' ]
+  apply_lora_to_mlp: True
+  apply_lora_to_output: False
+  lora_rank: 8  # Higher rank increases accuracy but also increases memory usage
+  lora_alpha: 16  # Usually alpha = 2 * rank
+  lora_dropout: 0.0
+
+checkpointer:
+  _component_: torchtune.training.FullModelHFCheckpointer
+  checkpoint_dir: ${checkpoint_dir}
+  checkpoint_files:
+    filename_format: model-{}-of-{}.safetensors
+    max_filename: "00004"
+  recipe_checkpoint: null
+  output_dir: ${output_dir}
+  model_type: LLAMA3
+resume_from_checkpoint: False  # Set to True to resume training
+should_load_recipe_state: False  # Set to True to resume training
+save_adapter_weights_only: True  # Saves disk space when set to True, but might have to handle the adapters separately for inference
+
+# Dataset and Sampler
+dataset:
+  _component_: torchtune.datasets.samsum_dataset
+  source: whopriyam2/SUWMIT-dataset  # Use "csv" to use a local file instead of downloading from Hugging Face
+  data_files: null  # Path to dataset
+  column_map:
+    input: article
+    output: summary
+  split: train  # Slice [:50%]/[50%:] to enable mid-epoch checkpointing
+  new_system_prompt: You are a specialist medical communicator responsible for translating biomedical articles into a clear, accurate 10-20 sentence summary for non-experts. The summary should be at a Flesch–Kincaid grade level of 10–14 and explain any technical terms.
+  packed: False  # True increases speed but requires max_seq_length to be set
+seed: 4
+shuffle: True
+batch_size: 1
+
+# Optimizer and Scheduler
+optimizer:
+  _component_: torch.optim.AdamW
+  fused: True
+  weight_decay: 0.01
+  lr: 3e-4
+lr_scheduler:
+  _component_: torchtune.training.lr_schedulers.get_cosine_schedule_with_warmup
+  num_warmup_steps: 100
+
+loss:
+  _component_: torchtune.modules.loss.CEWithChunkedOutputLoss
+
+# Training
+epochs: 10  # Set 1 bigger than the target epoch to have recipe_state.pt created
+max_steps_per_epoch: null
+gradient_accumulation_steps: 8  # Use to increase effective batch size
+clip_grad_norm: null
+compile: True  # torch.compile the model + loss. True increases speed and decreases memory usage, but first step takes longer
+
+# Logging
+metric_logger:
+  _component_: torchtune.training.metric_logging.WandBLogger
+  project: suwmit
+  group: suwmit
+  job_type: lora_finetune_multi_device
+  settings: {
+    "_service_wait": 300,
+  }
+log_every_n_steps: 5
+
+# Environment
+device: cuda
+dtype: bf16
+
+# Activations Memory
+enable_activation_checkpointing: True  # True reduces memory usage
+enable_activation_offloading: True  # True reduces memory usage
+
+# Profiler (disabled)
+profiler:
+  _component_: torchtune.training.setup_torch_profiler
+  enabled: False
+
+  #Output directory of trace artifacts
+  output_dir: ${output_dir}/profiling_outputs
+
+  #`torch.profiler.ProfilerActivity` types to trace
+  cpu: True
+  cuda: True
+
+  #trace options passed to `torch.profiler.profile`
+  profile_memory: False
+  with_stack: False
+  record_shapes: True
+  with_flops: False
+
+  # `torch.profiler.schedule` options:
+  # wait_steps -> wait, warmup_steps -> warmup, active_steps -> active, num_cycles -> repeat
+  wait_steps: 5
+  warmup_steps: 3
+  active_steps: 2
+  num_cycles: 1
