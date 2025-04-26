@@ -52,7 +52,7 @@ save_adapter_weights_only: True  # Saves disk space when set to True, but might 
 # Dataset and Sampler
 dataset:
   _component_: torchtune.datasets.samsum_dataset
-  source: whopriyam2/SUWMIT-dataset  # Use "csv" to use a local file instead of downloading from Hugging Face
+  source: null  # Use "csv" to use a local file instead of downloading from Hugging Face
   data_files: null  # Path to dataset
   column_map:
     input: article
