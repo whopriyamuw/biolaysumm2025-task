@@ -188,8 +188,9 @@ class ModelTuner:
             subprocess.run(cmd, check=True)
 
     @classmethod
-    def create_config(cls, output_dir: str, data_files: str, split_begin: int, split_end: int, epochs: int = 1,
-                      input: Optional[str] = None, output: Optional[str] = None, resume: bool = False) -> str:
+    def create_config(cls, output_dir: str, source: str, data_files: str, split_begin: int, split_end: int,
+                      epochs: int = 1, input: Optional[str] = None, output: Optional[str] = None,
+                      resume: bool = False) -> str:
         """
         Creates a new config file for the fine-tuning process.
         Parameters:
@@ -208,6 +209,7 @@ class ModelTuner:
             'checkpoint_dir': os.path.join(MODEL_DIR, MODEL.split("/")[-1]),
             'output_dir': output_dir,
             'dataset': {
+                'source': source,
                 'data_files': data_files,
                 'column_map': {
                     'input': input or 'article',
@@ -250,13 +252,14 @@ class ModelTuner:
         cls._logger.info(f"Running command: {' '.join(cmd)}")
         return subprocess.Popen(cmd)
 
-    def finetune(self, data_files: str, epochs: int = 1, data_split: float = -1,
+    def finetune(self, source: str, data_files: str, epochs: int = 1, data_split: float = -1,
                  input: Optional[str] = None, output: Optional[str] = None) -> None:
         """
         Fine-tunes the model with the specified parameters.
 
         Parameters:
-            data_files: Path to the dataset file for fine-tuning.
+            source: Path or name of the dataset (e.g., Hugging Face dataset name).
+            data_files: Path(s) to source data file(s).
             epochs: Number of epochs to train the model.
             data_split: Data split for training.
             input: Input column for the model.
@@ -264,8 +267,9 @@ class ModelTuner:
         """
         self.download_model(self._model, self._hf_token)
 
-        dataset_name = data_files.replace("/", "_").replace("\\", "_").rsplit(".", maxsplit=1)[0]
-        output_dir = os.path.join(MODEL_DIR, f"finetuned_{dataset_name}")
+        format_name = lambda s: s.translate(str.maketrans("/\\-", "___"))
+        dataset = format_name(source) + (f"_{format_name(data_files).rsplit('.', maxsplit=1)[0]}" if data_files else "")
+        output_dir = os.path.join(MODEL_DIR, f"finetuned_{dataset}")
 
         # Adjust epochs based on data_split
         data_split = self.GPU_SPEED.get(self._gpu_model, 1) * self._gpu_count if data_split == -1 else data_split
@@ -288,7 +292,7 @@ class ModelTuner:
             split_end = int(min(split_begin + data_split * 100, 100))
 
             # Create a new config for fine-tuning
-            new_config_path = self.create_config(output_dir, data_files, split_begin, split_end, epochs_needed,
+            new_config_path = self.create_config(output_dir, source, data_files, split_begin, split_end, epochs_needed,
                                                  input, output, resume=bool(epochs_trained))
 
             # Fine-tune the model
@@ -308,19 +312,23 @@ class ModelTuner:
 def main():
     parser = argparse.ArgumentParser(description="Script for fine-tuning LLaMa 3.1 8B Instruct model.")
 
-    # Required arguments
-    parser.add_argument('--dataset', type=str, required=True,
-                        help='Path to the dataset for fine-tuning.')
-
-    # Optional arguments
-    parser.add_argument('--epochs', type=int, default=1,
-                        help='Epochs to train the model (default: 1)')
-    parser.add_argument('--data-split', type=float, default=-1,
-                        help='Data split for training (default: -1, auto-calculated based on GPU model and number)')
+    # Dataset arguments
+    parser.add_argument('--source', type=str, default='whopriyam2/SUWMIT-dataset',
+                        help='Path or name of the dataset (default: whopriyam2/SUWMIT-dataset')
+    parser.add_argument('--data-files', type=str, default=None,
+                        help='Path(s) to source data file(s) (default: None)')
     parser.add_argument('--input', type=str, default='article',
                         help='Input column for the model (default: article)')
     parser.add_argument('--output', type=str, default='summary',
                         help='Target output column for the model (default: summary)')
+
+    # Training arguments
+    parser.add_argument('--epochs', type=int, default=1,
+                        help='Epochs to train the model (default: 1)')
+    parser.add_argument('--data-split', type=float, default=-1,
+                        help='Data split for training (default: -1, auto-calculated based on GPU model and number)')
+
+    # Logging arguments
     parser.add_argument('--log-level', type=str, default='INFO',
                         choices=['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'],
                         help='Set logging level (default: INFO)')
@@ -329,7 +337,7 @@ def main():
 
     tuner = ModelTuner()
     tuner.set_logger_level(args.log_level)
-    tuner.finetune(args.dataset, args.epochs, args.data_split, args.input, args.output)
+    tuner.finetune(args.source, args.data_files, args.epochs, args.data_split, args.input, args.output)
 
 
 if __name__ == "__main__":
