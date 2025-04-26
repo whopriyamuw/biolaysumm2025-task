@@ -1,6 +1,5 @@
 import argparse
 
-from cli import validate_args
 from models import LlamaSummarizer
 
 
@@ -9,8 +8,16 @@ def main(
     checkpoint_path: str,
     dataset: str,
     dataset_split: str,
+    input_field: str = "article",
+    batch_size: int = 1,
 ):
-    summarizer = LlamaSummarizer(dataset, dataset_split, checkpoint_path)
+    summarizer = LlamaSummarizer(
+        dataset,
+        dataset_split,
+        checkpoint_path,
+        batch_size=batch_size,
+        input_field=input_field,
+    )
     summarizer.generate()
     summarizer.save(output_path)
 
@@ -43,8 +50,16 @@ if __name__ == "__main__":
         default="validation",
         help="Dataset split or data_file to use",
     )
+    parser.add_argument(
+        "--input-field",
+        type=str,
+        default="article",
+    )
+    parser.add_argument(
+        "--batch-size",
+        type=int,
+        default=1,
+    )
 
     args = parser.parse_args()
-    validated_args = validate_args(args)
-
-    main(**validated_args)
+    main(**vars(args))

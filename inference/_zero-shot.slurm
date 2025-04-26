@@ -18,4 +18,4 @@
 eval "$(conda shell.bash hook)"
 conda activate inference
 
-python generate_zero_shot.py --output-path /gscratch/scrubbed/jcols/generated_summaries/validation_elife_llama-zero-shot.json --checkpoint-path /gscratch/scrubbed/jcols/inference/validation_elife_llama-zero-shot.ckpt --dataset elife --dataset-split validation
+python generate_zero_shot.py --output-path /gscratch/scrubbed/jcols/generated_summaries/extractive_zero-shot/length_30_validation_elife_BioBERT.json --checkpoint-path /gscratch/scrubbed/jcols/generated_summaries/extractive_zero-shot/length_30_validation_elife_BioBERT.ckpt --dataset suwmit --dataset-split "extractive/length_30/validation_elife_BioBERT.csv" --batch-size 8 --input-field extracted_summary

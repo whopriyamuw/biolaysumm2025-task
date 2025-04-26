@@ -92,13 +92,9 @@ class LlamaSummarizer:
             bos_token_id=self._tokenizer.bos_token_id,
             eos_token_id=self._model.generation_config.eos_token_id,
             pad_token_id=self._tokenizer.eos_token_id,
-            # cache_implementation="static",
         )
 
         self._model.to(self._get_device())
-        # self._model.forward = torch.compile(
-        #     self._model.forward, mode="reduce-overhead", fullgraph=True
-        # )
 
     def _read_checkpoint(self):
         if os.path.exists(self.checkpoint_path):
