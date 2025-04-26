@@ -272,7 +272,7 @@ class ModelTuner:
         output_dir = os.path.join(MODEL_DIR, f"finetuned_{dataset}")
 
         # Adjust epochs based on data_split
-        data_split = self.GPU_SPEED.get(self._gpu_model, 1) * self._gpu_count if data_split == -1 else data_split
+        data_split = self.GPU_SPEED.get(self._gpu_model, 0.2) * self._gpu_count if data_split == -1 else data_split
         split_epochs = ceil(1 / data_split)  # Each split becomes an epoch
         epochs_needed = max(split_epochs * epochs, epochs)
         epochs_trained = self.get_epochs_trained(output_dir)
