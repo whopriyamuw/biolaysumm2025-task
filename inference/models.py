@@ -88,18 +88,17 @@ class LlamaSummarizer:
         self._model.generation_config = GenerationConfig(
             do_sample=False,
             dola_layers="low",  # https://arxiv.org/abs/2309.03883
-            max_length=10000,
             max_new_tokens=self.max_new_tokens,
-            cache_implementation="static",
             bos_token_id=self._tokenizer.bos_token_id,
             eos_token_id=self._model.generation_config.eos_token_id,
             pad_token_id=self._tokenizer.eos_token_id,
+            # cache_implementation="static",
         )
 
         self._model.to(self._get_device())
-        self._model.forward = torch.compile(
-            self._model.forward, mode="reduce-overhead", fullgraph=True
-        )
+        # self._model.forward = torch.compile(
+        #     self._model.forward, mode="reduce-overhead", fullgraph=True
+        # )
 
     def _read_checkpoint(self):
         if os.path.exists(self.checkpoint_path):
@@ -111,6 +110,10 @@ class LlamaSummarizer:
             print("No checkpoint found.")
 
         return len(self._summaries)
+
+    def _write_checkpoint(self, batch_number: int):
+        pd.DataFrame({"summary": self._summaries}).to_feather(self.checkpoint_path)
+        print(f"Checkpoint saved at batch {batch_number}.")
 
     def _batch_data(self, start_index: int, end_index: int) -> list[dict]:
         batch = self.dataset[self.input_field][start_index:end_index]
@@ -147,8 +150,7 @@ class LlamaSummarizer:
         )
 
         if batch_number % self.checkpoint_rate == 0:
-            pd.DataFrame({"summary": self._summaries}).to_feather(self.checkpoint_path)
-            print(f"Checkpoint saved at batch {batch_number}.")
+            self._write_checkpoint(batch_number)
 
     def generate(self):
         start_index = self._read_checkpoint()
@@ -161,10 +163,14 @@ class LlamaSummarizer:
             end_index = min(start_index + self.batch_size, len(self.dataset))
 
             input_length, inputs = self._preprocess(start_index, end_index)
-            outputs = self._model.generate(**inputs)
+            outputs = self._model.generate(
+                **inputs, generation_config=self._model.generation_config
+            )
             self._postprocess(outputs, input_length, batch_number)
 
             start_index = end_index
+
+        self._write_checkpoint(batch_number)
 
         return self._summaries
 
@@ -194,6 +200,8 @@ class LlamaSummarizer:
                 self._save_json(output_path)
             case ".txt":
                 self._save_txt(output_path)
+
+        print(f"Done! Saved {len(self._summaries)} summaries to {output_path}.")
 
 
 class LlamaSummarizerTuned(LlamaSummarizer):
