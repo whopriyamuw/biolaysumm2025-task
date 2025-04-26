@@ -267,8 +267,9 @@ class ModelTuner:
         """
         self.download_model(self._model, self._hf_token)
 
-        dataset_name = data_files.replace("/", "_").replace("\\", "_").rsplit(".", maxsplit=1)[0]
-        output_dir = os.path.join(MODEL_DIR, f"finetuned_{dataset_name}")
+        format_name = lambda s: s.translate(str.maketrans("/\\-", "___"))
+        dataset = format_name(source) + (f"_{format_name(data_files).rsplit('.', maxsplit=1)[0]}" if data_files else "")
+        output_dir = os.path.join(MODEL_DIR, f"finetuned_{dataset}")
 
         # Adjust epochs based on data_split
         data_split = self.GPU_SPEED.get(self._gpu_model, 1) * self._gpu_count if data_split == -1 else data_split
