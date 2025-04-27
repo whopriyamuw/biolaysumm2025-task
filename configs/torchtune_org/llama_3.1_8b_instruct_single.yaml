@@ -80,7 +80,7 @@ epochs: 10  # Set 1 bigger than the target epoch to have recipe_state.pt created
 max_steps_per_epoch: null
 gradient_accumulation_steps: 8  # Use to increase effective batch size
 clip_grad_norm: null
-compile: True  # torch.compile the model + loss. True increases speed and decreases memory usage, but first step takes longer
+compile: False  # torch.compile the model + loss. True increases speed and decreases memory usage slightly, but first step takes much longer.
 
 # Logging
 metric_logger:
