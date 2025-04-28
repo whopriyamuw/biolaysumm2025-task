@@ -17,7 +17,8 @@ from typing import Optional, Union
 import torch
 import yaml
 
-from paths import MODEL, MODEL_DIR, CONFIG_FILE, CONFIG_DIR
+from paths import *
+from gpus import *
 
 
 def update_config(original: dict, updates: dict) -> dict:
@@ -40,7 +41,6 @@ def update_config(original: dict, updates: dict) -> dict:
 
 
 class ModelTuner:
-    GPU_SPEED = {'A40': 0.25, 'A100': 1}  # Epochs per 8 hours
     _logger = None
 
     def __init__(self, model: str = MODEL, hf_token: Optional[str] = None):
@@ -149,15 +149,19 @@ class ModelTuner:
         """
         if torch.cuda.is_available():
             gpu_name = torch.cuda.get_device_name(0)
-            gpu_model = re.search(rf"{'|'.join(cls.GPU_SPEED.keys())}", gpu_name)
+            gpu_model = re.search(rf"{'|'.join(GPUS.keys())}", gpu_name)
 
             if not gpu_model:
-                cls._logger.error(f"Currently supported GPUs: {', '.join(cls.GPU_SPEED.keys())}")
-                raise ValueError(f"Unrecognized GPU: {gpu_name}")
+                cls._logger.warning(
+                    f"\nUnrecognized GPU: {gpu_name}.\n"
+                    f"Supported GPUs: {', '.join(GPUS.keys())}.\n"
+                    f"Using default settings."
+                )
 
-            return torch.cuda.device_count(), gpu_model.group(0)
+            return torch.cuda.device_count(), gpu_model.group(0) if gpu_model else gpu_name
         else:
             raise RuntimeError("No GPU found.")
+
 
     @classmethod
     def download_model(cls, model: str = MODEL, hf_token: Optional[str] = None) -> None:
@@ -189,7 +193,7 @@ class ModelTuner:
 
     @classmethod
     def create_config(cls, output_dir: str, source: str, data_files: str, split_begin: int, split_end: int,
-                      epochs: int = 1, input: Optional[str] = None, output: Optional[str] = None,
+                      epochs: int = 1, batch_size: int = 1, input: Optional[str] = None, output: Optional[str] = None,
                       resume: bool = False) -> str:
         """
         Creates a new config file for the fine-tuning process.
@@ -220,6 +224,7 @@ class ModelTuner:
             'resume_from_checkpoint': resume,
             'should_load_recipe_state': resume,
             'epochs': epochs,
+            'batch_size': batch_size,
         }
 
         # Update the default config with the modifications
@@ -252,7 +257,7 @@ class ModelTuner:
         cls._logger.info(f"Running command: {' '.join(cmd)}")
         return subprocess.Popen(cmd)
 
-    def finetune(self, source: str, data_files: str, epochs: int = 1, data_split: float = -1,
+    def finetune(self, source: str, data_files: str, epochs: int = 1, batch_size: int = -1, data_split: float = -1,
                  input: Optional[str] = None, output: Optional[str] = None) -> None:
         """
         Fine-tunes the model with the specified parameters.
@@ -261,18 +266,23 @@ class ModelTuner:
             source: Path or name of the dataset (e.g., Hugging Face dataset name).
             data_files: Path(s) to source data file(s).
             epochs: Number of epochs to train the model.
+            batch_size: Batch size for training.
             data_split: Data split for training.
             input: Input column for the model.
             output: Target output column for the model.
         """
         self.download_model(self._model, self._hf_token)
 
+        # Output directory
         format_name = lambda s: s.translate(str.maketrans("/\\-", "___"))
         dataset = format_name(source) + (f"_{format_name(data_files).rsplit('.', maxsplit=1)[0]}" if data_files else "")
         output_dir = os.path.join(MODEL_DIR, f"finetuned_{dataset}")
 
+        # Batch size
+        batch_size = GPUS[self._gpu_model].batch_size if batch_size == -1 else batch_size
+
         # Adjust epochs based on data_split
-        data_split = self.GPU_SPEED.get(self._gpu_model, 1) * self._gpu_count if data_split == -1 else data_split
+        data_split = GPUS[self._gpu_model].data_split * self._gpu_count if data_split == -1 else data_split
         split_epochs = ceil(1 / data_split)  # Each split becomes an epoch
         epochs_needed = max(split_epochs * epochs, epochs)
         epochs_trained = self.get_epochs_trained(output_dir)
@@ -280,6 +290,7 @@ class ModelTuner:
         self._logger.debug(f"\n"
                            f"{self.gpu_count = }\n"
                            f"{self.gpu_model = }\n"
+                           f"{batch_size = }\n"
                            f"{data_split = }\n"
                            f"{epochs_needed = }\n"
                            f"{epochs_trained = }\n")
@@ -293,7 +304,7 @@ class ModelTuner:
 
             # Create a new config for fine-tuning
             new_config_path = self.create_config(output_dir, source, data_files, split_begin, split_end, epochs_needed,
-                                                 input, output, resume=bool(epochs_trained))
+                                                 batch_size, input, output, resume=bool(epochs_trained))
 
             # Fine-tune the model
             process = self._run_torchtune(new_config_path)
@@ -326,7 +337,9 @@ def main():
     parser.add_argument('--epochs', type=int, default=1,
                         help='Epochs to train the model (default: 1)')
     parser.add_argument('--data-split', type=float, default=-1,
-                        help='Data split for training (default: -1, auto-calculated based on GPU model and number)')
+                        help='Data split for training (default: -1, automatically calculated based on GPU model and number)')
+    parser.add_argument('--batch-size', type=int, default=-1,
+                        help='Batch size for training (default: -1, automatically set based on GPU model)')
 
     # Logging arguments
     parser.add_argument('--log-level', type=str, default='INFO',
@@ -337,7 +350,7 @@ def main():
 
     tuner = ModelTuner()
     tuner.set_logger_level(args.log_level)
-    tuner.finetune(args.source, args.data_files, args.epochs, args.data_split, args.input, args.output)
+    tuner.finetune(args.source, args.data_files, args.epochs, args.batch_size, args.data_split, args.input, args.output)
 
 
 if __name__ == "__main__":
