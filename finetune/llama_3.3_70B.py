@@ -86,8 +86,10 @@ trainer = SFTTrainer(
         lr_scheduler_type = "linear",
         seed = 3407,
         output_dir = "../models",
+        save_strategy="steps",
+        save_steps=50,
         report_to = "none", # Use this for WandB etc
     ),
 )
 
-trainer_stats = trainer.train()
+trainer_stats = trainer.train(resume_from_checkpoint = True)
