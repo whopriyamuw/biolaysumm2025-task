@@ -1,3 +1,5 @@
+import os.path
+
 from unsloth import FastLanguageModel
 import torch
 
@@ -63,33 +65,39 @@ from trl import SFTTrainer
 from transformers import TrainingArguments
 from unsloth import is_bfloat16_supported
 
+output_dir = "../models/3.3_70B"
+
 trainer = SFTTrainer(
-    model = model,
-    tokenizer = tokenizer,
-    train_dataset = dataset,
-    dataset_text_field = "text",
-    max_seq_length = max_seq_length,
-    dataset_num_proc = 2,
-    packing = False, # Can make training 5x faster for short sequences.
-    args = TrainingArguments(
-        per_device_train_batch_size = 2,
-        gradient_accumulation_steps = 4,
-        warmup_steps = 5,
-        num_train_epochs = 2, # Set this for 1 full training run.
-        max_steps = 60,
-        learning_rate = 2e-4,
-        fp16 = not is_bfloat16_supported(),
-        bf16 = is_bfloat16_supported(),
-        logging_steps = 1,
-        optim = "adamw_8bit",
-        weight_decay = 0.01,
-        lr_scheduler_type = "linear",
-        seed = 3407,
-        output_dir = "../models",
+    model=model,
+    tokenizer=tokenizer,
+    train_dataset=dataset,
+    dataset_text_field="text",
+    max_seq_length=max_seq_length,
+    dataset_num_proc=2,
+    packing=False,  # Can make training 5x faster for short sequences.
+    args=TrainingArguments(
+        per_device_train_batch_size=2,
+        gradient_accumulation_steps=4,
+        warmup_steps=5,
+        num_train_epochs=2,  # Set this for 1 full training run.
+        max_steps=60,
+        learning_rate=2e-4,
+        fp16=not is_bfloat16_supported(),
+        bf16=is_bfloat16_supported(),
+        logging_steps=1,
+        optim="adamw_8bit",
+        weight_decay=0.01,
+        lr_scheduler_type="linear",
+        seed=3407,
+        output_dir=output_dir,
         save_strategy="steps",
         save_steps=50,
-        report_to = "none", # Use this for WandB etc
+        report_to="none",  # Use this for WandB etc
     ),
 )
 
-trainer_stats = trainer.train(resume_from_checkpoint = True)
+def should_resume(directory_path):
+    return any(os.scandir(directory_path))
+
+resume = should_resume(output_dir)
+trainer_stats = trainer.train(resume_from_checkpoint=resume)
