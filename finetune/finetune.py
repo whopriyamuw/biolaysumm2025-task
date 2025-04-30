@@ -17,8 +17,8 @@ from typing import Optional, Union
 import torch
 import yaml
 
-from paths import *
 from gpus import *
+from paths import *
 
 
 def update_config(original: dict, updates: dict) -> dict:
@@ -34,7 +34,7 @@ def update_config(original: dict, updates: dict) -> dict:
     """
     for key, value in updates.items():
         if isinstance(value, Mapping) and key in original:
-            original[key] = update_config(original.get(key, {}), value)
+            original[key] = update_config(original.get(key, {}) or {}, value)
         else:
             original[key] = value
     return original
@@ -162,7 +162,6 @@ class ModelTuner:
         else:
             raise RuntimeError("No GPU found.")
 
-
     @classmethod
     def download_model(cls, model: str = MODEL, hf_token: Optional[str] = None) -> None:
         """
@@ -192,9 +191,9 @@ class ModelTuner:
             subprocess.run(cmd, check=True)
 
     @classmethod
-    def create_config(cls, output_dir: str, source: str, data_files: str, split_begin: int, split_end: int,
-                      epochs: int = 1, batch_size: int = 1, input: Optional[str] = None, output: Optional[str] = None,
-                      resume: bool = False) -> str:
+    def create_config(cls, output_dir: str, source: str, train_data: str, dev_data: str, use_dev_data,
+                      split_begin: int, split_end: int, epochs: int = 1, batch_size: int = 1,
+                      input: Optional[str] = None, output: Optional[str] = None, resume: bool = False) -> str:
         """
         Creates a new config file for the fine-tuning process.
         Parameters:
@@ -202,6 +201,14 @@ class ModelTuner:
         Returns:
             str: Path to the new config file.
         """
+        # Dataset split
+        slice = f"{split_begin}%:{split_end}%"
+        split = f"train[{slice}]" + (f"+validation[{slice}]" if use_dev_data else "")
+        data_files = {
+            'train': train_data,
+            'validation': dev_data if dev_data else None
+        } if train_data else None
+
         # Load the default config file
         default_config_file = CONFIG_FILE.format(cls._device_setup)
         default_config_path = os.path.join(CONFIG_DIR, "torchtune_org", default_config_file)
@@ -219,7 +226,7 @@ class ModelTuner:
                     'input': input or 'article',
                     'output': output or 'summary'
                 },
-                'split': f"train[{split_begin}%:{split_end}%]",
+                'split': split,
             },
             'resume_from_checkpoint': resume,
             'should_load_recipe_state': resume,
@@ -257,14 +264,17 @@ class ModelTuner:
         cls._logger.info(f"Running command: {' '.join(cmd)}")
         return subprocess.Popen(cmd)
 
-    def finetune(self, source: str, data_files: str, epochs: int = 1, batch_size: int = -1, data_split: float = -1,
+    def finetune(self, source: str, train_data: Optional[str], dev_data: Optional[str], use_dev_data: bool = False,
+                 epochs: int = 1, batch_size: int = -1, data_split: float = -1,
                  input: Optional[str] = None, output: Optional[str] = None) -> None:
         """
         Fine-tunes the model with the specified parameters.
 
         Parameters:
             source: Path or name of the dataset (e.g., Hugging Face dataset name).
-            data_files: Path(s) to source data file(s).
+            train_data: Path to train data file.
+            dev_data: Path to train data file.
+            use_dev_data: Whether to include dev data for training. Set to True when dev_data is provided.
             epochs: Number of epochs to train the model.
             batch_size: Batch size for training.
             data_split: Data split for training.
@@ -275,8 +285,9 @@ class ModelTuner:
 
         # Output directory
         format_name = lambda s: s.translate(str.maketrans("/\\-", "___"))
-        dataset = format_name(source) + (f"_{format_name(data_files).rsplit('.', maxsplit=1)[0]}" if data_files else "")
-        output_dir = os.path.join(MODEL_DIR, f"finetuned_{dataset}")
+        dataset = format_name(source) + (f"_{format_name(train_data).rsplit('.', maxsplit=1)[0]}" if train_data else "")
+        use_dev_data = use_dev_data or dev_data
+        output_dir = os.path.join(MODEL_DIR, f"finetuned_{dataset}" + ("_with_dev" if use_dev_data else ""))
 
         # Batch size
         batch_size = GPUS[self._gpu_model].batch_size if batch_size == -1 else batch_size
@@ -303,8 +314,9 @@ class ModelTuner:
             split_end = int(min(split_begin + data_split * 100, 100))
 
             # Create a new config for fine-tuning
-            new_config_path = self.create_config(output_dir, source, data_files, split_begin, split_end, epochs_needed,
-                                                 batch_size, input, output, resume=bool(epochs_trained))
+            new_config_path = self.create_config(output_dir, source, train_data, dev_data, use_dev_data,
+                                                 split_begin, split_end, epochs_needed, batch_size,
+                                                 input, output, resume=bool(epochs_trained))
 
             # Fine-tune the model
             process = self._run_torchtune(new_config_path)
@@ -326,8 +338,12 @@ def main():
     # Dataset arguments
     parser.add_argument('--source', type=str, default='whopriyam2/SUWMIT-dataset',
                         help='Path or name of the dataset (default: whopriyam2/SUWMIT-dataset')
-    parser.add_argument('--data-files', type=str, default=None,
-                        help='Path(s) to source data file(s) (default: None)')
+    parser.add_argument('--train-data', type=str, default=None,
+                        help='Path(s) to train data file (default: None)')
+    parser.add_argument('--dev-data', type=str, default=None,
+                        help='Path(s) to dev data file (default: None)')
+    parser.add_argument('--use-dev-data', type=bool, default=False,
+                        help='Include dev data for training (default: False)')
     parser.add_argument('--input', type=str, default='article',
                         help='Input column for the model (default: article)')
     parser.add_argument('--output', type=str, default='summary',
@@ -350,7 +366,8 @@ def main():
 
     tuner = ModelTuner()
     tuner.set_logger_level(args.log_level)
-    tuner.finetune(args.source, args.data_files, args.epochs, args.batch_size, args.data_split, args.input, args.output)
+    tuner.finetune(args.source, args.train_data, args.dev_data, args.use_dev_data, args.epochs, args.batch_size,
+                   args.data_split, args.input, args.output)
 
 
 if __name__ == "__main__":
