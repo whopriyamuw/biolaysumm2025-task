@@ -59,6 +59,12 @@ MODEL_CONFIGS = {
         "checkpoint_path": "/gscratch/scrubbed/jcols/generated_summaries/finetuned_length_40_epoch_2_{split}_elife_BioBERT.ckpt",
         "dataset_split": "extractive/length_40/{split}_elife_BioBERT.csv",
     },
+    "elife_biobert_40_all": {
+        "adapter_path": "/gscratch/stf/yongsinp/biolaysumm2025-task/models/finetuned_whopriyam2_SUWMIT_dataset_extractive_length_40_train_elife_BioBERT_with_dev/epoch_9",
+        "output_path": "/gscratch/scrubbed/jcols/generated_summaries/finetuned_length_40_all_elife_BioBERT.json",
+        "checkpoint_path": "/gscratch/scrubbed/jcols/generated_summaries/finetuned_length_40_all_elife_BioBERT.ckpt",
+        "dataset_split": "extractive/length_40/{split}_elife_BioBERT.csv",
+    },
     "plos_biobert_20": {
         "adapter_path": "/gscratch/stf/yongsinp/biolaysumm2025-task/models/finetuned_whopriyam2_SUWMIT_dataset_extractive_length_20_train_plos_BioBERT/epoch_9",
         "output_path": "/gscratch/scrubbed/jcols/generated_summaries/finetuned_length_20_{split}_plos_BioBERT.json",

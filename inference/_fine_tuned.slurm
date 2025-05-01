@@ -18,4 +18,4 @@
 eval "$(conda shell.bash hook)"
 conda activate inference
 
-python generate_from_finetuned.py --model-name elife_fulltext --split validation
+python generate_from_finetuned.py --model-name elife_biobert_40_all --split test
