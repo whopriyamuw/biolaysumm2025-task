@@ -9,7 +9,7 @@ fast Python package and project manager, written in Rust.
 
 1. Clone the repository:
    ```sh
-   git clone git@github.com:whopriyamuw/biolaysumm2025-task.git suwmit-biolaysumm
+   git clone --recursive git@github.com:whopriyamuw/biolaysumm2025-task.git suwmit-biolaysumm
    cd suwmit-biolaysumm
    ```
 
@@ -237,6 +237,33 @@ python generate_zero_shot.py --output-path OUTPUT_PATH --checkpoint-path CHECKPO
 Although this project includes several evaluation metrics under `src/metrics`, the preferred method
 is to use the `evaluation` package at the root of this repository, which features a self-contained
 implementation of the official evaluation pipeline for the BioLaySumm 2025 shared task.
+
+This project can be configured by running the commands below. This will create a new `conda`
+environment and install all the necessary dependencies.
+
+```shell
+cd src/evaluation
+bash prepare_env.sh
+```
+
+To evaluate a specific output, use the following command:
+
+```shell
+python evaluation_final.py \
+  --prediction_file predictions.json \
+  --groundtruth_file references.json \
+  --task_name "lay_summ" \
+  > output.eval.txt
+```
+
+Where,
+
+- `predictions.json` is a JSON Lines file where each line contains a JSON object with a
+  `generated_caption` property that holds the predicted summary.
+- `references.json` is a JSON Lines file where each line contains a JSON object with two properties:
+  `document` and `reference`.
+
+This evaluation pipeline also supports execution through SLURM jobs. An example file is available at `src/evaluation/run_evals.slurm`.
 
 ### Additional Resources
 

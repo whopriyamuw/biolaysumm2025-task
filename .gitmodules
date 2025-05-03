@@ -1,0 +1,3 @@
+[submodule "src/evaluation"]
+	path = src/evaluation
+	url = https://github.com/josecols/BioLaySumm2025
