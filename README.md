@@ -49,7 +49,7 @@ fast Python package and project manager, written in Rust.
 > The project's code is located in the `src` directory. To run scripts, you must use this directory
 > as the working directory.
 
-### Data scripts
+### Data Scripts
 
 - `download_datasets`. This script downloads the official `PLOS` and `eLife` datasets, storing all
   splits as CSV files in
@@ -74,7 +74,7 @@ fast Python package and project manager, written in Rust.
    python -m data.normalize_metrics
    ```
 
-### Extractive summarization
+### Extractive Summarization
 
 The `extract/extractive_summariser.py` script generates extractive summaries using a specific
 embedding model, dataset, and split configuration. These parameters are set globally within the
@@ -164,7 +164,7 @@ The extractive summaries will be saved in the `data/processed/extractive` direct
     tune run --nproc_per_node 2 lora_finetune_distributed --config CONFIG_NAME
    ```
 
-### Inference
+### Inference for Abstractive Summarization
 
 The inference module supports two execution modes: running the base LLaMa 3.1 8B Instruct model with
 zero-shot prompting and executing a fine-tuned version of the same LLaMa model by loading its
