@@ -136,32 +136,17 @@ The extractive summaries will be saved in the `data/processed/extractive` direct
 
 8. **Change to the project directory**:
    ```sh
-   cd /gscratch/scrubbed/USERNAME/project_directory/finetune
+   cd /gscratch/scrubbed/USERNAME/PROJECT_DIRECTORY/finetune
    ```
 
 9. **Request a GPU and run your training job** (tested on NVIDIA A40/A100 with 64 GB RAM):
    ```sh
-   eval "$(conda shell.bash hook)"  
+   salloc --account=stf --partition=ckpt-all --gpus=a40:1 --mem=64G --time=24:00:00  
    conda activate llama3  
    python finetune.py \
    --train-data extractive/length_40/train_elife_BioBERT.csv \
    --epochs 2 \
    --input extracted_summary
-   ```
-
-10. **Download LLaMa 3 weights**:
-   ```sh
-    tune download meta-llama/Meta-Llama-3.1-8B \
-    --output-dir ./models/Llama-3.1-8B \
-    --hf-token TOKEN
-   ```
-
-11. **Fine-tune LLaMa 3**:
-   ```sh
-    # Single-device:
-    tune run lora_finetune_single_device --config CONFIG_NAME
-    # Distributed (2 GPUs):
-    tune run --nproc_per_node 2 lora_finetune_distributed --config CONFIG_NAME
    ```
 
 ### Inference for Abstractive Summarization
