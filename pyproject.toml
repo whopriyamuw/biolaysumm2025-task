@@ -1,7 +1,7 @@
 [project]
 name = "biolaysumm"
 version = "0.1.0"
-description = "Lay Summarization of Biomedical Research Articles and Radiology Reports @ BioNLP Workshop"
+description = "Lay Summarization of Biomedical Research Articles @ BioNLP Workshop"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
@@ -9,10 +9,19 @@ dependencies = [
     "bert-score>=0.3.13",
     "datasets>=3.5.0",
     "evaluate>=0.4.3",
-    "gritlm>=1.0.2",
+    "huggingface-hub[cli]>=0.30.2",
+    "nltk>=3.9.1",
     "pandas>=2.2.3",
     "peft>=0.15.2",
+    "pip>=25.1.1",
+    "pytextrank>=3.3.0",
+    "pyyaml>=6.0.2",
     "rouge-score>=0.1.2",
     "sacrebleu>=2.5.1",
+    "sentence-transformers>=4.1.0",
+    "setuptools>=78.1.0",
+    "spacy>=3.8.5",
+    "torchtune>=0.6.1",
     "unbabel-comet>=2.2.6",
+    "wheel>=0.45.1",
 ]
