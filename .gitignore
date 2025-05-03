@@ -1,7 +1,8 @@
 ## Project
 # Data
-biolaysumm_dataset/
-data/
+/data/interim/
+/data/raw/
+/data/processed/
 
 # Models
 models/

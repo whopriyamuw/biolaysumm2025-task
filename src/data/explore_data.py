@@ -1,11 +1,15 @@
-import pandas as pd
+import os
+
 import nltk
+import pandas as pd
+from datasets import load_dataset
 
 nltk.download("punkt")
 from nltk.tokenize import sent_tokenize
+from utils import DATA_ROOT
 
 # Load the dataset
-df = pd.read_csv("biolaysumm_dataset/elife/train.csv")
+df = load_dataset("BioLaySumm/BioLaySumm2025-eLife")["train"].to_pandas()
 
 # Add Sentence_count column using nltk sentence tokenizer
 df["Summary_sentence_count"] = df["summary"].apply(
@@ -32,4 +36,4 @@ print(df.loc[:, "Article_sentence_count"].mean())
 print(df.loc[:, "Summary_sentence_count"].median())
 print(df.loc[:, "Article_sentence_count"].median())
 
-df.to_csv("biolaysumm_dataset/elife/train_processed.csv")
+df.to_csv(os.path.join(DATA_ROOT, "processed", "elife", "train.csv"))

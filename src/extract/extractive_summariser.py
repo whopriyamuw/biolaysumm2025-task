@@ -1,14 +1,30 @@
 """Script to perform extractive summarization"""
-import sys
+
+import os.path
 import time
+
 import pandas as pd
 import spacy
-import pytextrank
 import torch
+import pytextrank
+from datasets import load_dataset
 from sentence_transformers import SentenceTransformer, util
 
-device_available = "cuda" if torch.cuda.is_available() else "cpu"
-print("DEVICE AVAILABLE? - ", str(device_available))
+from utils import DATA_ROOT
+
+
+def get_device():
+    if torch.cuda.is_available():
+        return "cuda"
+
+    if torch.backends.mps.is_available():
+        return "mps"
+
+    return "cpu"
+
+
+device = get_device()
+print("DEVICE AVAILABLE? - ", str(device))
 
 # Load spacy + pytextrank
 nlp = spacy.load("en_core_web_sm")
@@ -24,8 +40,8 @@ Models to be used:
 5. Manal0809/medical-term-similarity
 """
 model = SentenceTransformer(
-    "abhinand/MedEmbed-large-v0.1",
-    device=device_available,
+    "pritamdeka/BioBERT-mnli-snli-scinli-scitail-mednli-stsb",
+    device=device,
 )
 count = 1
 
@@ -60,7 +76,7 @@ def extract_and_rank(text, top_k, final_k):
     return " ".join(ranked_sents[:final_k])
 
 
-df = pd.read_csv("biolaysumm_dataset/elife/train_processed.csv")
+df = load_dataset("BioLaySumm/BioLaySumm2025-eLife", split="test").to_pandas()
 
 print(len(df))
 
@@ -72,8 +88,9 @@ df["extracted_summary"] = df["article"].apply(
 
 print(f"Time taken to extract: {time.time() - t1} seconds")
 
-df.to_csv(
-    "biolaysumm_dataset/summaries/extracted/train_elife_MedEmbed-large.csv", index=False
-)
+file_dir = os.path.join(DATA_ROOT, "processed", "extractive")
+os.makedirs(file_dir, exist_ok=True)
+filename = os.path.join(file_dir, "test_elife_BioBERT.csv")
+df.to_csv(filename, index=False)
 
 print(df[["article", "extracted_summary"]].head(5))

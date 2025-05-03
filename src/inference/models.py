@@ -201,9 +201,16 @@ class LlamaSummarizer:
 
 
 class LlamaSummarizerTuned(LlamaSummarizer):
-    def __init__(self, adapter_path: str, *args, **kwargs):
+    def __init__(
+        self, adapter_path: str, input_field: str, batch_size: int, *args, **kwargs
+    ):
         self._adapter_path = adapter_path
-        super().__init__(input_field="extracted_summary", batch_size=8, *args, **kwargs)
+        super().__init__(
+            input_field=input_field,
+            batch_size=batch_size,
+            *args,
+            **kwargs,
+        )
 
     def _load_model(self):
         super()._load_model()
