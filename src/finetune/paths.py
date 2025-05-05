@@ -1,7 +1,7 @@
 import os
+from pathlib import Path
 
-from utils import PROJECT_ROOT
-
+PROJECT_ROOT = Path(__file__).parent.parent.parent.absolute()
 MODEL_DIR = os.path.join(PROJECT_ROOT, "models")
 MODEL = "meta-llama/Llama-3.1-8B-Instruct"
 CONFIG_DIR = os.path.join(PROJECT_ROOT, "configs")
