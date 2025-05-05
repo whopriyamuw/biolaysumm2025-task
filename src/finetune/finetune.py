@@ -1,5 +1,5 @@
 """
-Script for fine-tuning LLaMa 3.1 8B Instruct model.
+Script for fine-tuning LLaMa 3 Instruct models.
 """
 import argparse
 import copy
@@ -321,7 +321,7 @@ class ModelTuner:
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Script for fine-tuning LLaMa 3.1 8B Instruct model.")
+    parser = argparse.ArgumentParser(description="Script for fine-tuning LLaMa 3 Instruct models.")
 
     # Dataset arguments
     parser.add_argument('--source', type=str, default='whopriyam2/SUWMIT-dataset',
