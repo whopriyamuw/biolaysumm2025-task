@@ -278,6 +278,7 @@ class ModelTuner:
         dataset = format_name(source) + (f"_{format_name(data_files).rsplit('.', maxsplit=1)[0]}" if data_files else "")
         output_dir = os.path.join(MODEL_DIR, f"finetuned_{dataset}")
 
+        # Todo: Halve batch size for the 70B model
         # Batch size
         batch_size = GPUS[self._gpu_model].batch_size if batch_size == -1 else batch_size
 
