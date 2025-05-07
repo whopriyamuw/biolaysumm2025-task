@@ -202,7 +202,7 @@ class ModelTuner:
         """
         # Load the default config file
         config_file = "{}{}.yaml"
-        default_config_file = config_file.format(model, "_qat" if self._qat else "")
+        default_config_file = config_file.format(model, "")
         default_config_path = os.path.join(CONFIG_DIR, "torchtune_org", default_config_file)
         with open(default_config_path, 'r') as f:
             default_config = yaml.safe_load(f)
@@ -225,6 +225,13 @@ class ModelTuner:
             'epochs': epochs,
             'batch_size': batch_size,
         }
+
+        # Add quantization-aware training settings
+        if self._qat:
+            modifications['quantizer'] = {
+                '_component_': "torchtune.training.quantization.Int8DynActInt4WeightQATQuantizer",
+                'groupsize': 256
+            }
 
         # Update the default config with the modifications
         new_config = update_config(copy.deepcopy(default_config), modifications)
