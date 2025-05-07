@@ -43,7 +43,7 @@ def update_config(original: dict, updates: dict) -> dict:
 class ModelTuner:
     _logger = None
 
-    def __init__(self, model: str = MODEL, hf_token: Optional[str] = None):
+    def __init__(self, model: str, qat: bool = False, hf_token: Optional[str] = None):
         """
         Initializes the ModelTuner class.
 
@@ -53,6 +53,7 @@ class ModelTuner:
         """
         self._initialize_class_attributes()
         self._model = model
+        self._qat = qat
         self._hf_token = hf_token
 
     @property
@@ -97,7 +98,6 @@ class ModelTuner:
 
             # Get device setup
             cls._gpu_count, cls._gpu_model = cls.get_gpus()
-            cls._device_setup = "single" if cls._gpu_count == 1 else "distributed"
 
     @classmethod
     def set_logger_level(cls, level: Union[str, int] = logging.INFO) -> None:
@@ -162,9 +162,8 @@ class ModelTuner:
         else:
             raise RuntimeError("No GPU found.")
 
-
     @classmethod
-    def download_model(cls, model: str = MODEL, hf_token: Optional[str] = None) -> None:
+    def download_model(cls, model: str, hf_token: Optional[str] = None) -> None:
         """
         Downloads the model from Hugging Face.
 
@@ -191,8 +190,7 @@ class ModelTuner:
             ]
             subprocess.run(cmd, check=True)
 
-    @classmethod
-    def create_config(cls, output_dir: str, source: str, data_files: str, split_begin: int, split_end: int,
+    def create_config(self, model: str, output_dir: str, source: str, data_files: str, split_begin: int, split_end: int,
                       epochs: int = 1, batch_size: int = 1, input: Optional[str] = None, output: Optional[str] = None,
                       resume: bool = False) -> str:
         """
@@ -203,14 +201,15 @@ class ModelTuner:
             str: Path to the new config file.
         """
         # Load the default config file
-        default_config_file = CONFIG_FILE.format(cls._device_setup)
+        config_file = "{}{}.yaml"
+        default_config_file = config_file.format(model, "_qat" if self._qat else "")
         default_config_path = os.path.join(CONFIG_DIR, "torchtune_org", default_config_file)
         with open(default_config_path, 'r') as f:
             default_config = yaml.safe_load(f)
 
         # Create changes to the config
         modifications = {
-            'checkpoint_dir': os.path.join(MODEL_DIR, MODEL.split("/")[-1]),
+            'checkpoint_dir': os.path.join(MODEL_DIR, self._model.split("/")[-1]),
             'output_dir': output_dir,
             'dataset': {
                 'source': source,
@@ -230,16 +229,18 @@ class ModelTuner:
         # Update the default config with the modifications
         new_config = update_config(copy.deepcopy(default_config), modifications)
 
-        cls._logger.debug(f"\n##### Default Config #####\n"
+        self._logger.debug(f"\n##### Default Config #####\n"
                           f"{pformat(default_config)}\n\n")
-        cls._logger.debug(f"\n##### Changes #####\n"
+        self._logger.debug(f"\n##### Changes #####\n"
                           f"{pformat(modifications)}\n\n")
-        cls._logger.debug(f"\n##### New Config #####\n"
+        self._logger.debug(f"\n##### New Config #####\n"
                           f"{pformat(new_config)}\n\n")
 
         # Save the new config to a file
         new_config_dir = os.path.join(CONFIG_DIR, "torchtune_run")
-        new_config_file = CONFIG_FILE.format(f"{cls._device_setup}_{datetime.now().strftime('%Y%m%d_%H%M%S')}")
+        new_config_file = config_file.format(model,
+                                             ("_qat" if self._qat else "")
+                                             + f"_{datetime.now().strftime('%Y%m%d_%H%M%S')}")
         new_config_path = os.path.join(new_config_dir, new_config_file)
         os.makedirs(new_config_dir, exist_ok=True)
         with open(new_config_path, 'w') as file:
@@ -276,7 +277,8 @@ class ModelTuner:
         # Output directory
         format_name = lambda s: s.translate(str.maketrans("/\\-", "___"))
         dataset = format_name(source) + (f"_{format_name(data_files).rsplit('.', maxsplit=1)[0]}" if data_files else "")
-        output_dir = os.path.join(MODEL_DIR, f"finetuned_{dataset}")
+        model = self._model.split('/')[-1].lower().replace("-", "_")
+        output_dir = os.path.join(MODEL_DIR, f"finetuned_{dataset}_{model}")
 
         # Todo: Halve batch size for the 70B model
         # Batch size
@@ -304,7 +306,7 @@ class ModelTuner:
             split_end = int(min(split_begin + data_split * 100, 100))
 
             # Create a new config for fine-tuning
-            new_config_path = self.create_config(output_dir, source, data_files, split_begin, split_end, epochs_needed,
+            new_config_path = self.create_config(model, output_dir, source, data_files, split_begin, split_end, epochs_needed,
                                                  batch_size, input, output, resume=bool(epochs_trained))
 
             # Fine-tune the model
@@ -335,12 +337,17 @@ def main():
                         help='Target output column for the model (default: summary)')
 
     # Training arguments
+    parser.add_argument('--model', type=str, default='3.1-8B',
+                        choices=['3.1-8B', '3.3-70B'],
+                        help='Name of the model to train (default: 3.1-8B)')
     parser.add_argument('--epochs', type=int, default=1,
                         help='Epochs to train the model (default: 1)')
     parser.add_argument('--data-split', type=float, default=-1,
                         help='Data split for training (default: -1, automatically calculated based on GPU model and number)')
     parser.add_argument('--batch-size', type=int, default=-1,
                         help='Batch size for training (default: -1, automatically set based on GPU model)')
+    parser.add_argument('--qat', action='store_true',
+                        help='Enable quantization-aware training (default: False)')
 
     # Logging arguments
     parser.add_argument('--log-level', type=str, default='INFO',
@@ -349,7 +356,11 @@ def main():
 
     args = parser.parse_args()
 
-    tuner = ModelTuner()
+    if args.qat and args.model == '3.1-8B':
+        raise ValueError("Quantization-aware training is only supported for the 3.3-70B model.")
+
+    model = "meta-llama/Llama-{}-Instruct".format(args.model)
+    tuner = ModelTuner(model, args.qat)
     tuner.set_logger_level(args.log_level)
     tuner.finetune(args.source, args.data_files, args.epochs, args.batch_size, args.data_split, args.input, args.output)
 

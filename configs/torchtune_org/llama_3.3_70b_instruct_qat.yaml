@@ -1,25 +1,3 @@
-# Config for multi-device LoRA finetuning in lora_finetune_distributed.py
-# using a Llama3.1 8B Instruct model
-#
-# This config assumes that you've run the following command before launching
-# this run:
-#   tune download meta-llama/Meta-Llama-3.1-8B-Instruct --output-dir <YOUR_CHECKPOINT_DIR> --ignore-patterns "original/consolidated.00.pth"
-#
-# To launch on 2 devices, run the following command from root:
-#   tune run --nproc_per_node 2 lora_finetune_distributed --config llama_3.1_8b_instruct_distributed.yaml
-#
-# You can add specific overrides through the command line. For example
-# to override the checkpointer directory while launching training
-# you can run:
-#   tune run --nproc_per_node 2 lora_finetune_distributed --config llama_3.1_8b_instruct_distributed.yaml checkpointer.checkpoint_dir=<YOUR_CHECKPOINT_DIR>
-#
-# This config works best when the model is being fine-tuned on 2+ GPUs.
-# For single device LoRA finetuning please use llama_3.1_8b_instruct_single.yaml
-# or 8B_qlora_single_device.yaml
-
-checkpoint_dir: null  # Should match the directory you used when downloading the model
-output_dir: null
-
 # Tokenizer
 tokenizer:
   _component_: torchtune.models.llama3.llama3_tokenizer
@@ -28,12 +6,12 @@ tokenizer:
 
 # Model Arguments
 model:
-  _component_: torchtune.models.llama3_1.lora_llama3_1_8b
+  _component_: torchtune.models.llama3_3.qlora_llama3_3_70b
   lora_attn_modules: [ 'q_proj', 'v_proj', 'output_proj' ]
   apply_lora_to_mlp: True
   apply_lora_to_output: False
-  lora_rank: 8  # Higher rank increases accuracy but also increases memory usage
-  lora_alpha: 16  # Usually alpha = 2 * rank
+  lora_rank: 16  # higher increases accuracy and memory
+  lora_alpha: 32  # usually alpha=2*rank
   lora_dropout: 0.0
 
 checkpointer:
@@ -41,7 +19,7 @@ checkpointer:
   checkpoint_dir: ${checkpoint_dir}
   checkpoint_files:
     filename_format: model-{}-of-{}.safetensors
-    max_filename: "00004"
+    max_filename: "00030"
   recipe_checkpoint: null
   output_dir: ${output_dir}
   model_type: LLAMA3
@@ -89,7 +67,7 @@ metric_logger:
   _component_: torchtune.training.metric_logging.WandBLogger
   project: suwmit
   group: suwmit
-  job_type: lora_finetune_multi_device
+  job_type: qat_qlora_finetune
   settings: {
     "_service_wait": 300,
   }
@@ -98,6 +76,11 @@ log_every_n_steps: 5
 # Environment
 device: cuda
 dtype: bf16
+
+# QAT arguments
+quantizer:
+  _component_: torchtune.training.quantization.Int8DynActInt4WeightQATQuantizer
+  groupsize: 256
 
 # Activations Memory
 enable_activation_checkpointing: True  # True reduces memory usage
