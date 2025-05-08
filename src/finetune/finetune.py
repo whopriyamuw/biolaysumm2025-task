@@ -346,8 +346,8 @@ class ModelTuner:
 def main():
     parser = argparse.ArgumentParser(description="Script for fine-tuning LLaMa 3 Instruct models.")
 
-    ### Dataset arguments
-    # Dataset source
+    # Dataset arguments
+    # Dataset to use
     parser.add_argument('--source', type=str, default='whopriyam2/SUWMIT-dataset',
                         help='Path or name of the dataset (default: whopriyam2/SUWMIT-dataset')
     # Columns to use for training
@@ -363,7 +363,7 @@ def main():
     parser.add_argument('--use-dev-data', type=bool, default=False,
                         help='Include dev data for training (default: False)')
 
-    ### Training arguments
+    # Training arguments
     parser.add_argument('--model', type=str, default='3.1-8B',
                         choices=['3.1-8B', '3.3-70B'],
                         help='Name of the model to train (default: 3.1-8B)')
@@ -376,16 +376,18 @@ def main():
     parser.add_argument('--qat', action='store_true',
                         help='Enable quantization-aware training (default: False)')
 
-    ### Logging arguments
+    # Logging arguments
     parser.add_argument('--log-level', type=str, default='INFO',
                         choices=['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'],
                         help='Set logging level (default: INFO)')
 
     args = parser.parse_args()
 
+    # Validate arguments
     if args.qat and args.model == '3.1-8B':
         raise ValueError("Quantization-aware training is only supported for the 3.3-70B model.")
 
+    # Initialize and run the ModelTuner
     model = "meta-llama/Llama-{}-Instruct".format(args.model)
     tuner = ModelTuner(model, args.qat)
     tuner.set_logger_level(args.log_level)
