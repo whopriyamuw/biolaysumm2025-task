@@ -5,6 +5,8 @@ from models import LlamaSummarizer
 
 def main(*args, **kwargs):
     output_path = kwargs.pop("output_path")
+    kwargs["split"] = kwargs.pop("dataset_split")
+
     summarizer = LlamaSummarizer(*args, **kwargs)
     summarizer.generate()
     summarizer.save(output_path)
