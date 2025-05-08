@@ -346,34 +346,37 @@ class ModelTuner:
 def main():
     parser = argparse.ArgumentParser(description="Script for fine-tuning LLaMa 3 Instruct models.")
 
-    # Dataset arguments
+    ### Dataset arguments
+    # Dataset source
     parser.add_argument('--source', type=str, default='whopriyam2/SUWMIT-dataset',
                         help='Path or name of the dataset (default: whopriyam2/SUWMIT-dataset')
+    # Columns to use for training
+    parser.add_argument('--input', type=str, default='article',
+                        help='Input column for the model (default: article)')
+    parser.add_argument('--output', type=str, default='summary',
+                        help='Target output column for the model (default: summary)')
+    # Files to use for training
     parser.add_argument('--train-data', type=str, default=None,
                         help='Path(s) to train data file (default: None)')
     parser.add_argument('--dev-data', type=str, default=None,
                         help='Path(s) to dev data file (default: None)')
     parser.add_argument('--use-dev-data', type=bool, default=False,
                         help='Include dev data for training (default: False)')
-    parser.add_argument('--input', type=str, default='article',
-                        help='Input column for the model (default: article)')
-    parser.add_argument('--output', type=str, default='summary',
-                        help='Target output column for the model (default: summary)')
 
-    # Training arguments
+    ### Training arguments
     parser.add_argument('--model', type=str, default='3.1-8B',
                         choices=['3.1-8B', '3.3-70B'],
                         help='Name of the model to train (default: 3.1-8B)')
     parser.add_argument('--epochs', type=int, default=1,
                         help='Epochs to train the model (default: 1)')
     parser.add_argument('--data-split', type=float, default=-1,
-                        help='Data split for training (default: -1, automatically calculated based on GPU model and number)')
+                        help='Data split for training (0.0, 1.0] (default: -1, automatically calculated based on GPU model and number)')
     parser.add_argument('--batch-size', type=int, default=-1,
-                        help='Batch size for training (default: -1, automatically set based on GPU model)')
+                        help='Batch size for training [1,] (default: -1, automatically set based on GPU model)')
     parser.add_argument('--qat', action='store_true',
                         help='Enable quantization-aware training (default: False)')
 
-    # Logging arguments
+    ### Logging arguments
     parser.add_argument('--log-level', type=str, default='INFO',
                         choices=['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'],
                         help='Set logging level (default: INFO)')
