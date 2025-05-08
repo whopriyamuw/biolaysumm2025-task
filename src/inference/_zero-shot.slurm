@@ -6,7 +6,7 @@
 #SBATCH --account=stf
 #SBATCH --partition=ckpt-all
 #SBATCH --nodes=1
-#SBATCH --gpus-per-node=l40:1
+#SBATCH --gpus-per-node=a40:1
 #SBATCH --mem=64G
 #SBATCH --time=8:00:00
 
@@ -18,4 +18,4 @@
 eval "$(conda shell.bash hook)"
 conda activate inference
 
-python generate_zero_shot.py --output-path /gscratch/scrubbed/jcols/generated_summaries/extractive_cot/length_40_validation_elife_BioBERT.jsonl --checkpoint-path /gscratch/scrubbed/jcols/generated_summaries/extractive_zero-shot/length_40_validation_elife_BioBERT.ckpt --dataset suwmit --dataset-split "extractive/length_40/validation_elife_BioBERT.csv" --batch-size 4 --input-field extracted_summary
+python generate_zero_shot.py --output-path /gscratch/scrubbed/jcols/generated_summaries/length_20_validation_elife_BioBERT_preprocessed.jsonl --checkpoint-path /gscratch/scrubbed/jcols/generated_summaries/length_20_validation_elife_BioBERT_preprocessed.ckpt --dataset suwmit --dataset-split 20sent_preprocessed --batch-size 12 --input-field extracted_summary

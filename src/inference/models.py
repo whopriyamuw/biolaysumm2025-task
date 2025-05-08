@@ -12,7 +12,8 @@ from transformers import AutoModelForCausalLM, AutoTokenizer, GenerationConfig
 class HfDatasets(Enum):
     elife = "BioLaySumm/BioLaySumm2025-eLife"
     plos = "BioLaySumm/BioLaySumm2025-PLOS"
-    suwmit = "whopriyam2/SUWMIT-dataset"
+    # suwmit = "whopriyam2/SUWMIT-dataset"
+    suwmit = "josecols/suwmit"
 
 
 class Prompts(Enum):
@@ -68,7 +69,7 @@ class LlamaSummarizer:
         checkpoint_path: str,
         batch_size: int = 1,
         input_field: str = "article",
-        max_new_tokens: int = 384,
+        max_new_tokens: int = 512,
         prompt_version: str = "base",
     ):
         self._summaries = []
@@ -96,7 +97,8 @@ class LlamaSummarizer:
     @classmethod
     def _load_dataset(cls, dataset: str, split: str):
         if dataset == HfDatasets.suwmit.name:
-            return load_dataset(HfDatasets[dataset].value, data_files=split)["train"]
+            # return load_dataset(HfDatasets[dataset].value, data_files=split)["train"]
+            return load_dataset(HfDatasets[dataset].value, split)["validation"]
 
         return load_dataset(HfDatasets[dataset].value)[split]
 
@@ -227,7 +229,7 @@ class LlamaSummarizer:
         file_extension = os.path.splitext(output_path)[-1].lower()
 
         match file_extension:
-            case ".json":
+            case ".jsonl":
                 self._save_json(output_path)
             case ".txt":
                 self._save_txt(output_path)

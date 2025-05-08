@@ -51,7 +51,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--max-new-tokens",
         type=int,
-        default=384,
+        default=512,
     )
     parser.add_argument("--prompt-version", type=str, default="base")
 
