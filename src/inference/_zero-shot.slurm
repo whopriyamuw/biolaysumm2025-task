@@ -11,7 +11,7 @@
 #SBATCH --time=8:00:00
 
 #SBATCH --export=all
-#SBATCH --chdir=/mmfs1/home/jcols/inference
+#SBATCH --chdir=/mmfs1/home/jcols/biolaysumm/src/inference
 #SBATCH --mail-type=END,FAIL
 #SBATCH --mail-user=jcols@uw.edu
 
