@@ -12,8 +12,7 @@ from transformers import AutoModelForCausalLM, AutoTokenizer, GenerationConfig
 class HfDatasets(Enum):
     elife = "BioLaySumm/BioLaySumm2025-eLife"
     plos = "BioLaySumm/BioLaySumm2025-PLOS"
-    # suwmit = "whopriyam2/SUWMIT-dataset"
-    suwmit = "josecols/suwmit"
+    suwmit = "whopriyam2/SUWMIT-dataset"
 
 
 class Prompts(Enum):
@@ -71,10 +70,11 @@ class LlamaSummarizer:
         input_field: str = "article",
         max_new_tokens: int = 512,
         prompt_version: str = "base",
+        base_model: str = "meta-llama/Meta-Llama-3.1-8B-Instruct",
     ):
         self._summaries = []
         self._dtype = torch.bfloat16
-        self._model_id = "meta-llama/Meta-Llama-3.1-8B-Instruct"
+        self._model_id = base_model
         self._model = None
         self._tokenizer = None
         self._chat_template_config = {
@@ -97,8 +97,8 @@ class LlamaSummarizer:
     @classmethod
     def _load_dataset(cls, dataset: str, split: str):
         if dataset == HfDatasets.suwmit.name:
-            # return load_dataset(HfDatasets[dataset].value, data_files=split)["train"]
-            return load_dataset(HfDatasets[dataset].value, split)["validation"]
+            return load_dataset(HfDatasets[dataset].value, data_files=split)["train"]
+            # return load_dataset(HfDatasets[dataset].value, split)["validation"]
 
         return load_dataset(HfDatasets[dataset].value)[split]
 

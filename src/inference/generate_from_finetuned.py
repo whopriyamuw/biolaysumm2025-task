@@ -71,18 +71,29 @@ MODEL_CONFIGS = {
         "checkpoint_path": "/gscratch/scrubbed/jcols/generated_summaries/finetuned_length_20_{split}_plos_BioBERT.ckpt",
         "dataset_split": "extractive/length_20/{split}_plos_BioBERT.csv",
     },
+    "elife_biobert_40_70B": {
+        "adapter_path": "/gscratch/stf/yongsinp/biolaysumm2025-task/models/old/finetuned_whopriyam2_SUWMIT_dataset_extractive_length_40_train_elife_BioBERT/epoch_7",
+        "output_path": "/gscratch/scrubbed/jcols/generated_summaries/finetuned_length_40_70B_{split}_elife_BioBERT.json",
+        "checkpoint_path": "/gscratch/scrubbed/jcols/generated_summaries/finetuned_length_40_70B_{split}_elife_BioBERT.ckpt",
+        "dataset_split": "extractive/length_40/{split}_elife_BioBERT.csv",
+        "base_model": "meta-llama/Llama-3.1-70B-Instruct",
+    },
 }
 
 
 def main(config: dict, split: str):
-    summarizer = LlamaSummarizerTuned(
-        config["adapter_path"],
-        config.get("input_field", "extracted_summary"),
-        config.get("batch_size", 8),
-        config["dataset"],
-        config["dataset_split"].format(split=split),
-        config["checkpoint_path"].format(split=split),
-    )
+    kwargs = {
+        "batch_size": config.get("batch_size", 8),
+        "checkpoint_path": config["checkpoint_path"].format(split=split),
+        "dataset": config["dataset"],
+        "dataset_split": config["dataset_split"].format(split=split),
+        "input_field": config.get("input_field", "extracted_summary"),
+    }
+
+    if "base_model" in config:
+        kwargs["base_model"] = config["base_model"]
+
+    summarizer = LlamaSummarizerTuned(config["adapter_path"], **kwargs)
     summarizer.generate()
     summarizer.save(config["output_path"].format(split=split))
 
