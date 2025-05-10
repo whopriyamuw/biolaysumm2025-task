@@ -77,6 +77,7 @@ MODEL_CONFIGS = {
         "checkpoint_path": "/gscratch/scrubbed/jcols/generated_summaries/finetuned_length_40_70B_{split}_elife_BioBERT.ckpt",
         "dataset_split": "extractive/length_40/{split}_elife_BioBERT.csv",
         "base_model": "meta-llama/Llama-3.1-70B-Instruct",
+        "batch_size": 1,
     },
 }
 
