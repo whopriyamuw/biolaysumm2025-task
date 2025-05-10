@@ -201,10 +201,16 @@ class ModelTuner:
         # Dataset split
         slice = f"{split_begin}%:{split_end}%"
         split = f"train[{slice}]" + (f"+validation[{slice}]" if use_dev_data else "")
-        data_files = {
-            'train': train_data,
-            'validation': dev_data if dev_data else None
-        } if train_data else None
+        if train_data:
+            if dev_data:
+                data_files = {
+                    'train': train_data,
+                    'validation': dev_data if dev_data else None
+                }
+            else:
+                data_files = train_data
+        else:
+            data_file = None
 
         # Load the default config file
         config_file = "{}{}.yaml"
