@@ -3,21 +3,11 @@ import argparse
 from models import LlamaSummarizer
 
 
-def main(
-    output_path: str,
-    checkpoint_path: str,
-    dataset: str,
-    dataset_split: str,
-    input_field: str = "article",
-    batch_size: int = 1,
-):
-    summarizer = LlamaSummarizer(
-        dataset,
-        dataset_split,
-        checkpoint_path,
-        batch_size=batch_size,
-        input_field=input_field,
-    )
+def main(*args, **kwargs):
+    output_path = kwargs.pop("output_path")
+    kwargs["split"] = kwargs.pop("dataset_split")
+
+    summarizer = LlamaSummarizer(*args, **kwargs)
     summarizer.generate()
     summarizer.save(output_path)
 
@@ -60,6 +50,11 @@ if __name__ == "__main__":
         type=int,
         default=1,
     )
+    parser.add_argument(
+        "--max-new-tokens",
+        type=int,
+        default=512,
+    )
+    parser.add_argument("--prompt-version", type=str, default="base")
 
-    args = parser.parse_args()
-    main(**vars(args))
+    main(**vars(parser.parse_args()))
