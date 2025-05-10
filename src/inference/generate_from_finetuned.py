@@ -86,7 +86,7 @@ def main(config: dict, split: str):
         "batch_size": config.get("batch_size", 8),
         "checkpoint_path": config["checkpoint_path"].format(split=split),
         "dataset": config["dataset"],
-        "dataset_split": config["dataset_split"].format(split=split),
+        "split": config["dataset_split"].format(split=split),
         "input_field": config.get("input_field", "extracted_summary"),
     }
 
