@@ -8,14 +8,13 @@ import os
 import re
 import subprocess
 import time
+import torch
+import yaml
 from collections.abc import Mapping
 from datetime import datetime
 from math import ceil
 from pprint import pformat
 from typing import Optional, Union
-
-import torch
-import yaml
 
 from gpus import *
 from paths import *
@@ -43,7 +42,7 @@ def update_config(original: dict, updates: dict) -> dict:
 class ModelTuner:
     _logger = None
 
-    def __init__(self, model: str, qat: bool = False, hf_token: Optional[str] = None):
+    def __init__(self, model: str, hf_token: Optional[str] = None):
         """
         Initializes the ModelTuner class.
 
@@ -53,7 +52,6 @@ class ModelTuner:
         """
         self._initialize_class_attributes()
         self._model = model
-        self._qat = qat
         self._hf_token = hf_token
 
     @property
@@ -234,28 +232,20 @@ class ModelTuner:
             'batch_size': batch_size,
         }
 
-        # Add quantization-aware training settings
-        if self._qat:
-            modifications['quantizer'] = {
-                '_component_': "torchtune.training.quantization.Int8DynActInt4WeightQATQuantizer",
-                'groupsize': 256
-            }
-
         # Update the default config with the modifications
         new_config = update_config(copy.deepcopy(default_config), modifications)
 
         self._logger.debug(f"\n##### Default Config #####\n"
-                          f"{pformat(default_config)}\n\n")
+                           f"{pformat(default_config)}\n\n")
         self._logger.debug(f"\n##### Changes #####\n"
-                          f"{pformat(modifications)}\n\n")
+                           f"{pformat(modifications)}\n\n")
         self._logger.debug(f"\n##### New Config #####\n"
-                          f"{pformat(new_config)}\n\n")
+                           f"{pformat(new_config)}\n\n")
 
         # Save the new config to a file
         new_config_dir = os.path.join(CONFIG_DIR, "torchtune_run")
         new_config_file = config_file.format(model,
-                                             ("_qat" if self._qat else "")
-                                             + f"_{datetime.now().strftime('%Y%m%d_%H%M%S')}")
+                                             f"_{datetime.now().strftime('%Y%m%d_%H%M%S')}")
         new_config_path = os.path.join(new_config_dir, new_config_file)
         os.makedirs(new_config_dir, exist_ok=True)
         with open(new_config_path, 'w') as file:
@@ -373,8 +363,6 @@ def main():
                         help='Data split for training (0.0, 1.0] (default: -1, automatically calculated based on GPU model and number)')
     parser.add_argument('--batch-size', type=int, default=-1,
                         help='Batch size for training [1,] (default: -1, automatically set based on GPU model)')
-    parser.add_argument('--qat', action='store_true',
-                        help='Enable quantization-aware training (default: False)')
 
     # Logging arguments
     parser.add_argument('--log-level', type=str, default='INFO',
@@ -383,13 +371,9 @@ def main():
 
     args = parser.parse_args()
 
-    # Validate arguments
-    if args.qat and args.model == '3.1-8B':
-        raise ValueError("Quantization-aware training is only supported for the 3.3-70B model.")
-
     # Initialize and run the ModelTuner
     model = "meta-llama/Llama-{}-Instruct".format(args.model)
-    tuner = ModelTuner(model, args.qat)
+    tuner = ModelTuner(model)
     tuner.set_logger_level(args.log_level)
     tuner.finetune(args.source, args.train_data, args.dev_data, args.use_dev_data, args.epochs, args.batch_size,
                    args.data_split, args.input, args.output)
