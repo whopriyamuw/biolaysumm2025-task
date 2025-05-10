@@ -1,5 +1,6 @@
 import os
 from enum import Enum
+from textwrap import dedent
 
 import pandas as pd
 import torch
@@ -11,24 +12,53 @@ from transformers import AutoModelForCausalLM, AutoTokenizer, GenerationConfig
 class HfDatasets(Enum):
     elife = "BioLaySumm/BioLaySumm2025-eLife"
     plos = "BioLaySumm/BioLaySumm2025-PLOS"
-    suwmit = "whopriyam2/SUWMIT-dataset"
+    # suwmit = "whopriyam2/SUWMIT-dataset"
+    suwmit = "josecols/suwmit"
 
 
 class Prompts(Enum):
-    ASSISTANT = "Lay Summary:"
-    SYSTEM = (
-        "You are a specialist medical communicator responsible for "
-        "translating biomedical articles into a clear, accurate 10-20 sentence summary for non-experts. "
-        "The summary should be at a Flesch–Kincaid grade level of 10–14 and explain any technical terms."
-    )
+    @staticmethod
+    def chat_ml(article_text: str, version: str) -> list:
+        return [
+            {"role": "system", "content": Prompts.system(version)},
+            {"role": "user", "content": article_text},
+            {"role": "assistant", "content": Prompts.assistant(version)},
+        ]
 
     @staticmethod
-    def chat_ml(article_text: str) -> list:
-        return [
-            {"role": "system", "content": Prompts.SYSTEM.value},
-            {"role": "user", "content": article_text},
-            {"role": "assistant", "content": Prompts.ASSISTANT.value},
-        ]
+    def assistant(version: str) -> str:
+        if version in {"base", "cot"}:
+            return "Lay Summary:"
+
+        raise NotImplementedError
+
+    @staticmethod
+    def system(version: str) -> str:
+        if version == "base":
+            return (
+                "You are a specialist medical communicator responsible for "
+                "translating biomedical articles into a clear, accurate 10-20 sentence summary for non-experts. "
+                "The summary should be at a Flesch–Kincaid grade level of 10–14 and explain any technical terms."
+            )
+
+        if version == "cot":
+            return dedent(
+                """
+                You are a specialist medical communicator responsible for translating biomedical articles into clear, accurate summaries for non-experts.
+
+                Your task is to generate a LAY summary in 10–20 sentences at a Flesch–Kincaid grade level of 10–14. You must ensure the summary is factually accurate, easy to understand, and explains any technical terms used.
+
+                Follow these three steps:
+
+                Step 1: Based on the provided extracted summary of the article as input, write an initial LAY summary that is clear, concise, and accessible to a general audience.
+
+                Step 2: Compare your initial summary with the extracted summary. Reflect on whether all key claims are supported by the original text. Note any inconsistencies, hallucinations, or missing information.
+
+                Step 3: Revise your summary as needed to improve factual accuracy and clarity. Output the corrected final version enclosed within <R> and </R> tags.
+                """
+            )
+
+        raise NotImplementedError
 
 
 class LlamaSummarizer:
@@ -39,19 +69,27 @@ class LlamaSummarizer:
         checkpoint_path: str,
         batch_size: int = 1,
         input_field: str = "article",
+        max_new_tokens: int = 512,
+        prompt_version: str = "base",
     ):
         self._summaries = []
         self._dtype = torch.bfloat16
         self._model_id = "meta-llama/Meta-Llama-3.1-8B-Instruct"
         self._model = None
         self._tokenizer = None
+        self._chat_template_config = {
+            "tokenize": False,
+            "add_generation_prompt": False,
+            "continue_final_message": True,
+        }
 
         self.batch_size = batch_size
         self.checkpoint_path = f"{checkpoint_path}.feather"
         self.input_field = input_field
+        self.prompt_version = prompt_version
 
         self.checkpoint_rate = 2  # save state every n batches.
-        self.max_new_tokens = 384
+        self.max_new_tokens = max_new_tokens
 
         self.dataset = self._load_dataset(dataset, split)
         self._load_model()
@@ -59,7 +97,8 @@ class LlamaSummarizer:
     @classmethod
     def _load_dataset(cls, dataset: str, split: str):
         if dataset == HfDatasets.suwmit.name:
-            return load_dataset(HfDatasets[dataset].value, data_files=split)["train"]
+            # return load_dataset(HfDatasets[dataset].value, data_files=split)["train"]
+            return load_dataset(HfDatasets[dataset].value, split)["validation"]
 
         return load_dataset(HfDatasets[dataset].value)[split]
 
@@ -115,10 +154,8 @@ class LlamaSummarizer:
         batch = self.dataset[self.input_field][start_index:end_index]
         prompts = [
             self._tokenizer.apply_chat_template(
-                Prompts.chat_ml(sample),
-                tokenize=False,
-                add_generation_prompt=False,
-                continue_final_message=True,
+                Prompts.chat_ml(sample, version=self.prompt_version),
+                **self._chat_template_config,
             )
             for sample in batch
         ]
@@ -192,7 +229,7 @@ class LlamaSummarizer:
         file_extension = os.path.splitext(output_path)[-1].lower()
 
         match file_extension:
-            case ".json":
+            case ".jsonl":
                 self._save_json(output_path)
             case ".txt":
                 self._save_txt(output_path)
@@ -216,3 +253,42 @@ class LlamaSummarizerTuned(LlamaSummarizer):
         super()._load_model()
 
         self._model = PeftModel.from_pretrained(self._model, self._adapter_path)
+
+
+class InteractiveLlamaSummarizer(LlamaSummarizer):
+    def __init__(self, prompt_version: str = "base", *args, **kwargs):
+        kwargs.update(
+            {
+                "dataset": "interactive",
+                "split": "none",
+                "checkpoint_path": "interactive",
+                "prompt_version": prompt_version,
+            }
+        )
+        super().__init__(*args, **kwargs)
+
+    @classmethod
+    def _load_dataset(cls, dataset: str, split: str):
+        return None
+
+    def generate_from_prompt(self, user_message: str):
+        messages = Prompts.chat_ml(user_message, version=self.prompt_version)
+
+        prompt = self._tokenizer.apply_chat_template(
+            messages, **self._chat_template_config
+        )
+
+        inputs = self._tokenizer([prompt], return_tensors="pt", padding=True).to(
+            self._model.device
+        )
+        input_length = inputs["input_ids"].shape[1]
+
+        outputs = self._model.generate(
+            **inputs, generation_config=self._model.generation_config
+        )
+
+        response = self._tokenizer.batch_decode(
+            outputs[:, input_length:], skip_special_tokens=True
+        )[0].strip()
+
+        return response
