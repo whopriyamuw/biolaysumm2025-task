@@ -1,8 +1,9 @@
 import argparse
-import os.path
+import os
 import re
 import time
 from enum import Enum
+import pandas as pd
 
 import pytextrank  # noqa
 import spacy
@@ -11,8 +12,6 @@ from datasets import Dataset, load_dataset
 from huggingface_hub import HfApi
 from sentence_transformers import SentenceTransformer, util
 from tqdm import tqdm
-
-from utils import DATA_ROOT
 
 
 class HfDatasets(Enum):
@@ -74,19 +73,19 @@ class BioBERTSummarizer:
 
         return parts[0].strip(), ""
 
-    def extract_and_rank(self, text: str) -> str:
-        """Extract and rank sentences from the input text."""
+    def extract_and_rank(self, text: str) -> list[str]:
+        """Extract and rank sentences from the input text, returning a list of ranked sentences."""
         if not isinstance(text, str) or not text.strip():
-            return ""
-
+            return []
+        print ("EXTRACTING SUMMARIES")
         doc = self.nlp(text)
         textrank_sents = [
             sent.text.strip()
-            for sent in doc._.textrank.summary(limit_sentences=self.sentence_count * 4)
+            for sent in doc._.textrank.summary(limit_sentences=80)
         ]
 
         if not textrank_sents:
-            return ""
+            return []
 
         sentence_embeddings = self.model.encode(textrank_sents, convert_to_tensor=True)
         doc_embedding = self.model.encode(text, convert_to_tensor=True)
@@ -98,7 +97,7 @@ class BioBERTSummarizer:
             sent for _, sent in sorted(zip(similarities, textrank_sents), reverse=True)
         ]
 
-        return " ".join(ranked_sents[: self.sentence_count])
+        return ranked_sents
 
     def process_dataset(
         self,
@@ -126,15 +125,20 @@ class BioBERTSummarizer:
 
             articles.append(text)
 
-        summaries = []
-        for text in tqdm(articles, desc="Summarizing", total=total_docs):
-            summary = self.extract_and_rank(text)
-            if concat_abstract:
-                summary = f"{abstracts[len(summaries)]} {summary}"
+        # Prepare columns for each summary length
+        summary_lengths = [10, 20, 30, 40]
+        summaries_dict = {f"extracted_summary_{n}": [] for n in summary_lengths}
 
-            summaries.append(summary)
+        for idx, text in enumerate(tqdm(articles, desc="Summarizing", total=total_docs)):
+            ranked_sents = self.extract_and_rank(text)
+            for n in summary_lengths:
+                summary = " ".join(ranked_sents[:n])
+                if concat_abstract:
+                    summary = f"{abstracts[idx]} {summary}".strip()
+                summaries_dict[f"extracted_summary_{n}"].append(summary)
 
-        output_df["extracted_summary"] = summaries
+        for n in summary_lengths:
+            output_df[f"extracted_summary_{n}"] = summaries_dict[f"extracted_summary_{n}"]
 
         print(f"\nTime taken to extract: {time.time() - start_time:.2f} seconds")
         return Dataset.from_pandas(output_df)
@@ -148,66 +152,95 @@ class BioBERTSummarizer:
         preprocess: bool,
         exclude_abstract: bool,
         concat_abstract: bool,
+        output_dir_in_repo: str = "",
+        data_root: str = "",
     ) -> None:
-        output_dir = os.path.join(DATA_ROOT, "processed", "extractive")
+        output_dir = os.path.join(data_root, "processed", "extractive")
         os.makedirs(output_dir, exist_ok=True)
 
-        filename_parts = [
-            split,
-            input_dataset,
-            "BioBERT",
-            f"{self.sentence_count}sent",
-        ]
-        if exclude_abstract:
-            filename_parts.append("exclude_abstract")
-        if concat_abstract:
-            filename_parts.append("concat_abstract")
-        if preprocess:
-            filename_parts.append("preprocessed")
-
-        local_path = os.path.join(output_dir, f"{'_'.join(filename_parts)}.csv")
-
+        summary_lengths = [10, 20, 30, 40]
         if data is None:
-            if os.path.exists(local_path):
-                print(f"Loading existing processed file from: {local_path}")
-                data = Dataset.from_csv(local_path)
+            # Try to load all summary length files, else raise error
+            loaded_any = False
+            for n in summary_lengths:
+                filename_parts = [
+                    split,
+                    input_dataset,
+                    "BioBERT",
+                    f"{n}sent",
+                ]
+                if exclude_abstract:
+                    filename_parts.append("exclude_abstract")
+                if concat_abstract:
+                    filename_parts.append("concat_abstract")
+                if preprocess:
+                    filename_parts.append("preprocessed")
+                local_path = os.path.join(output_dir, f"{'_'.join(filename_parts)}.csv")
+                if os.path.exists(local_path):
+                    print(f"Loading existing processed file from: {local_path}")
+                    loaded_any = True
+                else:
+                    print(f"File not found: {local_path}")
+            if not loaded_any:
+                raise ValueError("No data provided and no existing file found for any summary length")
+            return
+
+        # If data is provided, save and push for each summary length
+        df = data.to_pandas()
+        for n in summary_lengths:
+            filename_parts = [
+                split,
+                input_dataset,
+                "BioBERT",
+                f"{n}sent",
+            ]
+            if exclude_abstract:
+                filename_parts.append("exclude_abstract")
+            if concat_abstract:
+                filename_parts.append("concat_abstract")
+            if preprocess:
+                filename_parts.append("preprocessed")
+            local_path = os.path.join(output_dir, f"{'_'.join(filename_parts)}.csv")
+            # Select only the relevant columns
+            cols = ["article", "summary", f"extracted_summary_{n}"]
+            df_out = df[cols].copy()
+            df_out.rename(columns={f"extracted_summary_{n}": "extracted_summary"}, inplace=True)
+            df_out.to_csv(local_path, index=False)
+            print(f"Results for {n} sentences saved locally to: {local_path}")
+
+            # Upload using HfApi.upload_file
+            api = HfApi()
+            repo_file_name = os.path.basename(local_path)
+            if output_dir_in_repo:
+                path_in_repo = os.path.join(output_dir_in_repo, repo_file_name)
             else:
-                raise ValueError("No data provided and no existing file found")
-        else:
-            data.to_csv(local_path)
-            print(f"Results saved locally to: {local_path}")
-
-        print(f"\nPushing dataset to HuggingFace: {output_dataset}")
-        variant_config = "_".join(filename_parts[3:])
-
-        api = HfApi()
-        try:
-            api.create_repo(repo_id=output_dataset, repo_type="dataset", exist_ok=True)
-            data.push_to_hub(
-                output_dataset,
-                split=split,
-                config_name=variant_config,
-                private=False,
-                embed_external_files=False,
-            )
-            print(
-                f"Successfully uploaded to: https://huggingface.co/datasets/{output_dataset}"
-                f" (config: {variant_config}, split: {split})"
-            )
-        except Exception as e:
-            print(f"Failed to upload to HuggingFace Hub: {str(e)}")
+                path_in_repo = repo_file_name
+            try:
+                api.create_repo(repo_id=output_dataset, repo_type="dataset", exist_ok=True)
+                api.upload_file(
+                    path_or_fileobj=local_path,
+                    path_in_repo=path_in_repo,
+                    repo_id=output_dataset,
+                    repo_type="dataset",
+                )
+                print(
+                    f"Successfully uploaded to: https://huggingface.co/datasets/{output_dataset}/blob/main/{path_in_repo}"
+                )
+            except Exception as e:
+                print(f"Failed to upload to HuggingFace Hub: {str(e)}")
 
 
 def main(
-    sentence_count: int,
     dataset: str,
     split: str,
     output_dataset: str,
     preprocess: bool,
     exclude_abstract: bool,
     concat_abstract: bool,
+    output_dir_in_repo: str = "",
+    data_root: str = "biolaysumm_dataset/summaries",
 ) -> None:
-    summarizer = BioBERTSummarizer(sentence_count=sentence_count)
+    summarizer = BioBERTSummarizer()
     save_params = {
         "concat_abstract": concat_abstract,
         "exclude_abstract": exclude_abstract,
@@ -215,6 +248,8 @@ def main(
         "output_dataset": output_dataset,
         "preprocess": preprocess,
         "split": split,
+        "output_dir_in_repo": output_dir_in_repo,
+        "data_root": data_root,
     }
 
     try:
@@ -233,12 +268,6 @@ def main(
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description="Run extractive summarization using BioBERT embeddings."
-    )
-    parser.add_argument(
-        "--sentence-count",
-        type=int,
-        default=20,
-        help="Number of sentences in the generated summary",
     )
     parser.add_argument(
         "--dataset",
@@ -271,8 +300,20 @@ if __name__ == "__main__":
     parser.add_argument(
         "--output-dataset",
         type=str,
-        default="josecols/suwmit",
+        default="whopriyam2/SUWMIT-dataset",
         help="HuggingFace Hub dataset ID to upload output",
+    )
+    parser.add_argument(
+        "--output-dir-in-repo",
+        type=str,
+        default="new_files",
+        help="Directory within the HuggingFace repo to push the files to (optional)",
+    )
+    parser.add_argument(
+        "--data-root",
+        type=str,
+        default="biolaysumm_dataset/summaries",
+        help="Local root directory to save processed files",
     )
 
     args = parser.parse_args()
