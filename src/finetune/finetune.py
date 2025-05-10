@@ -375,8 +375,9 @@ def main():
     model = "meta-llama/Llama-{}-Instruct".format(args.model)
     tuner = ModelTuner(model)
     tuner.set_logger_level(args.log_level)
-    tuner.finetune(args.source, args.train_data, args.dev_data, args.use_dev_data, args.epochs, args.batch_size,
-                   args.data_split, args.input, args.output)
+    tuner.finetune(args.source, args.train_data, args.dev_data, args.use_dev_data,
+                   args.epochs, args.batch_size, args.data_split,
+                   args.input, args.output)
 
 
 if __name__ == "__main__":
