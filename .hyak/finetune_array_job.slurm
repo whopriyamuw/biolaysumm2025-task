@@ -2,7 +2,6 @@
 
 #SBATCH --job-name=ft_elife_extractive_8B_array
 #SBATCH --output=./logs/%x_%A_%a.out
-#SBATCH --error=./logs/%x_%A_%a.err
 
 #SBATCH --account=stf
 #SBATCH --partition=ckpt-all
