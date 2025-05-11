@@ -68,7 +68,7 @@ class LlamaSummarizer:
         checkpoint_path: str,
         batch_size: int = 1,
         input_field: str = "article",
-        max_new_tokens: int = 512,
+        max_new_tokens: int = 384,
         prompt_version: str = "base",
         base_model: str = "meta-llama/Meta-Llama-3.1-8B-Instruct",
     ):
