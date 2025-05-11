@@ -11,73 +11,53 @@ MODEL_CONFIGS = {
         "input_field": "article",
         "batch_size": 1,
     },
-    "elife_biobert_10_1e": {
-        "adapter_path": "/gscratch/scrubbed/yongsinp/biolaysumm2025-task/models/finetuned_extractive_length_10_train_elife_BioBERT/epoch_3",
-        "output_path": "/gscratch/scrubbed/jcols/generated_summaries/finetuned_length_10_epoch_1_{split}_elife_BioBERT.json",
-        "checkpoint_path": "/gscratch/scrubbed/jcols/generated_summaries/finetuned_length_10_epoch_1_{split}_elife_BioBERT.ckpt",
-        "dataset_split": "extractive/length_10/{split}_elife_BioBERT.csv",
+    "elife_biobert_10_concat_abstract": {
+        "adapter_path": "/gscratch/stf/yongsinp/biolaysumm2025-task/models/finetuned_whopriyam2_SUWMIT_dataset_new_files_train_elife_BioBERT_10sent_concat_abstract_llama_3.1_8b_instruct/epoch_7",
+        "output_path": "/gscratch/scrubbed/jcols/generated_summaries/finetuned_10_concat_abstract_{split}_elife_BioBERT.json",
+        "checkpoint_path": "/gscratch/scrubbed/jcols/generated_summaries/finetuned_10_concat_abstract_{split}_elife_BioBERT.ckpt",
+        "dataset_split": "new_files/{split}_elife_BioBERT_10sent_concat_abstract.csv",
     },
-    "elife_biobert_10_2e": {
-        "adapter_path": "/gscratch/scrubbed/yongsinp/biolaysumm2025-task/models/finetuned_extractive_length_10_train_elife_BioBERT/epoch_7",
-        "output_path": "/gscratch/scrubbed/jcols/generated_summaries/finetuned_length_10_epoch_2_{split}_elife_BioBERT.json",
-        "checkpoint_path": "/gscratch/scrubbed/jcols/generated_summaries/finetuned_length_10_epoch_2_{split}_elife_BioBERT.ckpt",
-        "dataset_split": "extractive/length_10/{split}_elife_BioBERT.csv",
+    "elife_biobert_10_exclude_abstract": {
+        "adapter_path": "/gscratch/stf/yongsinp/biolaysumm2025-task/models/finetuned_whopriyam2_SUWMIT_dataset_new_files_train_elife_BioBERT_10sent_exclude_abstract_llama_3.1_8b_instruct/epoch_7",
+        "output_path": "/gscratch/scrubbed/jcols/generated_summaries/finetuned_10_exclude_abstract_{split}_elife_BioBERT.json",
+        "checkpoint_path": "/gscratch/scrubbed/jcols/generated_summaries/finetuned_10_exclude_abstract_{split}_elife_BioBERT.ckpt",
+        "dataset_split": "new_files/{split}_elife_BioBERT_10sent_exclude_abstract.csv",
     },
-    "elife_biobert_20_1e": {
-        "adapter_path": "/gscratch/scrubbed/yongsinp/biolaysumm2025-task/models/finetuned_extractive_length_20_train_elife_BioBERT/epoch_3",
-        "output_path": "/gscratch/scrubbed/jcols/generated_summaries/finetuned_length_20_epoch_1_{split}_elife_BioBERT.json",
-        "checkpoint_path": "/gscratch/scrubbed/jcols/generated_summaries/finetuned_length_20_epoch_1_{split}_elife_BioBERT.ckpt",
-        "dataset_split": "extractive/length_20/{split}_elife_BioBERT.csv",
+    "elife_biobert_20_concat_abstract": {
+        "adapter_path": "/gscratch/stf/yongsinp/biolaysumm2025-task/models/finetuned_whopriyam2_SUWMIT_dataset_new_files_train_elife_BioBERT_20sent_concat_abstract_llama_3.1_8b_instruct/epoch_7",
+        "output_path": "/gscratch/scrubbed/jcols/generated_summaries/finetuned_20_concat_abstract_{split}_elife_BioBERT.json",
+        "checkpoint_path": "/gscratch/scrubbed/jcols/generated_summaries/finetuned_20_concat_abstract_{split}_elife_BioBERT.ckpt",
+        "dataset_split": "new_files/{split}_elife_BioBERT_20sent_concat_abstract.csv",
     },
-    "elife_biobert_20_2e": {
-        "adapter_path": "/gscratch/scrubbed/yongsinp/biolaysumm2025-task/models/finetuned_extractive_length_20_train_elife_BioBERT/epoch_7",
-        "output_path": "/gscratch/scrubbed/jcols/generated_summaries/finetuned_length_20_epoch_2_{split}_elife_BioBERT.json",
-        "checkpoint_path": "/gscratch/scrubbed/jcols/generated_summaries/finetuned_length_20_epoch_2_{split}_elife_BioBERT.ckpt",
-        "dataset_split": "extractive/length_20/{split}_elife_BioBERT.csv",
+    "elife_biobert_20_exclude_abstract": {
+        "adapter_path": "/gscratch/stf/yongsinp/biolaysumm2025-task/models/finetuned_whopriyam2_SUWMIT_dataset_new_files_train_elife_BioBERT_20sent_exclude_abstract_llama_3.1_8b_instruct/epoch_7",
+        "output_path": "/gscratch/scrubbed/jcols/generated_summaries/finetuned_20_exclude_abstract_{split}_elife_BioBERT.json",
+        "checkpoint_path": "/gscratch/scrubbed/jcols/generated_summaries/finetuned_20_exclude_abstract_{split}_elife_BioBERT.ckpt",
+        "dataset_split": "new_files/{split}_elife_BioBERT_20sent_exclude_abstract.csv",
     },
-    "elife_biobert_30_1e": {
-        "adapter_path": "/gscratch/scrubbed/yongsinp/biolaysumm2025-task/models/finetuned_extractive_length_30_train_elife_BioBERT/epoch_3",
-        "output_path": "/gscratch/scrubbed/jcols/generated_summaries/finetuned_length_30_epoch_1_{split}_elife_BioBERT.json",
-        "checkpoint_path": "/gscratch/scrubbed/jcols/generated_summaries/finetuned_length_30_epoch_1_{split}_elife_BioBERT.ckpt",
-        "dataset_split": "extractive/length_30/{split}_elife_BioBERT.csv",
+    "elife_biobert_30_concat_abstract": {
+        "adapter_path": "/gscratch/stf/yongsinp/biolaysumm2025-task/models/finetuned_whopriyam2_SUWMIT_dataset_new_files_train_elife_BioBERT_30sent_concat_abstract_llama_3.1_8b_instruct/epoch_7",
+        "output_path": "/gscratch/scrubbed/jcols/generated_summaries/finetuned_30_concat_abstract_{split}_elife_BioBERT.json",
+        "checkpoint_path": "/gscratch/scrubbed/jcols/generated_summaries/finetuned_30_concat_abstract_{split}_elife_BioBERT.ckpt",
+        "dataset_split": "new_files/{split}_elife_BioBERT_30sent_concat_abstract.csv",
     },
-    "elife_biobert_30_2e": {
-        "adapter_path": "/gscratch/scrubbed/yongsinp/biolaysumm2025-task/models/finetuned_extractive_length_30_train_elife_BioBERT/epoch_7",
-        "output_path": "/gscratch/scrubbed/jcols/generated_summaries/finetuned_length_30_epoch_2_{split}_elife_BioBERT.json",
-        "checkpoint_path": "/gscratch/scrubbed/jcols/generated_summaries/finetuned_length_30_epoch_2_{split}_elife_BioBERT.ckpt",
-        "dataset_split": "extractive/length_30/{split}_elife_BioBERT.csv",
+    "elife_biobert_30_exclude_abstract": {
+        "adapter_path": "/gscratch/stf/yongsinp/biolaysumm2025-task/models/finetuned_whopriyam2_SUWMIT_dataset_new_files_train_elife_BioBERT_30sent_exclude_abstract_llama_3.1_8b_instruct/epoch_7",
+        "output_path": "/gscratch/scrubbed/jcols/generated_summaries/finetuned_30_exclude_abstract_{split}_elife_BioBERT.json",
+        "checkpoint_path": "/gscratch/scrubbed/jcols/generated_summaries/finetuned_30_exclude_abstract_{split}_elife_BioBERT.ckpt",
+        "dataset_split": "new_files/{split}_elife_BioBERT_30sent_exclude_abstract.csv",
     },
-    "elife_biobert_40_1e": {
-        "adapter_path": "/gscratch/scrubbed/yongsinp/biolaysumm2025-task/models/finetuned_extractive_length_40_train_elife_BioBERT/epoch_3",
-        "output_path": "/gscratch/scrubbed/jcols/generated_summaries/finetuned_length_40_epoch_1_{split}_elife_BioBERT.json",
-        "checkpoint_path": "/gscratch/scrubbed/jcols/generated_summaries/finetuned_length_40_epoch_1_{split}_elife_BioBERT.ckpt",
-        "dataset_split": "extractive/length_40/{split}_elife_BioBERT.csv",
+    "elife_biobert_40_concat_abstract": {
+        "adapter_path": "/gscratch/stf/yongsinp/biolaysumm2025-task/models/finetuned_whopriyam2_SUWMIT_dataset_new_files_train_elife_BioBERT_40sent_concat_abstract_llama_3.1_8b_instruct/epoch_7",
+        "output_path": "/gscratch/scrubbed/jcols/generated_summaries/finetuned_40_concat_abstract_{split}_elife_BioBERT.json",
+        "checkpoint_path": "/gscratch/scrubbed/jcols/generated_summaries/finetuned_40_concat_abstract_{split}_elife_BioBERT.ckpt",
+        "dataset_split": "new_files/{split}_elife_BioBERT_40sent_concat_abstract.csv",
     },
-    "elife_biobert_40_2e": {
-        "adapter_path": "/gscratch/stf/yongsinp/biolaysumm2025-task/models/finetuned_extractive_length_40_train_elife_BioBERT/epoch_7",
-        "output_path": "/gscratch/scrubbed/jcols/generated_summaries/finetuned_length_40_epoch_2_{split}_elife_BioBERT.json",
-        "checkpoint_path": "/gscratch/scrubbed/jcols/generated_summaries/finetuned_length_40_epoch_2_{split}_elife_BioBERT.ckpt",
-        "dataset_split": "extractive/length_40/{split}_elife_BioBERT.csv",
-    },
-    "elife_biobert_40_all": {
-        "adapter_path": "/gscratch/stf/yongsinp/biolaysumm2025-task/models/finetuned_whopriyam2_SUWMIT_dataset_extractive_length_40_train_elife_BioBERT_with_dev/epoch_9",
-        "output_path": "/gscratch/scrubbed/jcols/generated_summaries/finetuned_length_40_all_elife_BioBERT.json",
-        "checkpoint_path": "/gscratch/scrubbed/jcols/generated_summaries/finetuned_length_40_all_elife_BioBERT.ckpt",
-        "dataset_split": "extractive/length_40/{split}_elife_BioBERT.csv",
-    },
-    "plos_biobert_20": {
-        "adapter_path": "/gscratch/stf/yongsinp/biolaysumm2025-task/models/finetuned_whopriyam2_SUWMIT_dataset_extractive_length_20_train_plos_BioBERT/epoch_9",
-        "output_path": "/gscratch/scrubbed/jcols/generated_summaries/finetuned_length_20_{split}_plos_BioBERT.json",
-        "checkpoint_path": "/gscratch/scrubbed/jcols/generated_summaries/finetuned_length_20_{split}_plos_BioBERT.ckpt",
-        "dataset_split": "extractive/length_20/{split}_plos_BioBERT.csv",
-    },
-    "elife_biobert_40_70B": {
-        "adapter_path": "/gscratch/stf/yongsinp/biolaysumm2025-task/models/old/finetuned_whopriyam2_SUWMIT_dataset_extractive_length_40_train_elife_BioBERT/epoch_7",
-        "output_path": "/gscratch/scrubbed/jcols/generated_summaries/finetuned_length_40_70B_{split}_elife_BioBERT.json",
-        "checkpoint_path": "/gscratch/scrubbed/jcols/generated_summaries/finetuned_length_40_70B_{split}_elife_BioBERT.ckpt",
-        "dataset_split": "extractive/length_40/{split}_elife_BioBERT.csv",
-        "base_model": "meta-llama/Llama-3.1-70B-Instruct",
-        "batch_size": 1,
+    "elife_biobert_40_exclude_abstract": {
+        "adapter_path": "/gscratch/stf/yongsinp/biolaysumm2025-task/models/finetuned_whopriyam2_SUWMIT_dataset_new_files_train_elife_BioBERT_40sent_exclude_abstract_llama_3.1_8b_instruct/epoch_7",
+        "output_path": "/gscratch/scrubbed/jcols/generated_summaries/finetuned_40_exclude_abstract_{split}_elife_BioBERT.json",
+        "checkpoint_path": "/gscratch/scrubbed/jcols/generated_summaries/finetuned_40_exclude_abstract_{split}_elife_BioBERT.ckpt",
+        "dataset_split": "new_files/{split}_elife_BioBERT_40sent_exclude_abstract.csv",
     },
 }
 
