@@ -47,9 +47,9 @@ def process_ckpt(feather_path, data_files):
     filename = os.path.splitext(feather_path)[0]
     output_path = filename + ".jsonl"
 
-    ckpt_df = pd.read_feather(feather_path)["train"]
+    ckpt_df = pd.read_feather(feather_path)
     dataset_df = load_dataset(
-        "whopriyam2/SUWMIT-dataset", data_files=data_files, split="validation"
+        "whopriyam2/SUWMIT-dataset", data_files=data_files, split="train"
     ).to_pandas()
 
     evals_df = pd.DataFrame(
@@ -66,7 +66,7 @@ def process_ckpt(feather_path, data_files):
 
 def main():
     for feather_path, config in DATASET_CONFIGS.items():
-        output_path = process_ckpt(feather_path, **config)
+        output_path = process_ckpt(feather_path, config["data_files"])
         print(f"Processed {feather_path} -> {output_path}")
 
 
