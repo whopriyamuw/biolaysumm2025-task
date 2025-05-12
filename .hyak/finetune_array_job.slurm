@@ -1,6 +1,7 @@
 #!/bin/bash
 
 #SBATCH --job-name=ft_elife_extractive_8B_array
+#SBATCH --open-mode=append
 #SBATCH --output=./logs/%x_%A_%a.out
 
 #SBATCH --account=stf
