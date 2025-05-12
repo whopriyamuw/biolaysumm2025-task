@@ -34,7 +34,7 @@ for col in df.columns:
 df_normalized["AVGFACT"] = df_normalized[["ROUGE", "BLEU", "METEOR", "BERTScore"]].mean(
     axis=1
 )
-df_normalized["AVGRD"] = df_normalized[["FKGL", "DCRS", "CLI"]].mean(axis=1)
+df_normalized["AVGRD"] = df_normalized[["FKGL", "DCRS", "CLI", "LENS"]].mean(axis=1)
 df_normalized["AVGREL"] = df_normalized[["AlignScore", "SummaC"]].mean(axis=1)
 df_normalized["TOTAVG"] = df_normalized[["AVGFACT", "AVGRD", "AVGREL"]].mean(axis=1)
 
@@ -51,6 +51,7 @@ column_order = [
     "FKGL",
     "DCRS",
     "CLI",
+    "LENS",
     "AVGRD",
     "AlignScore",
     "SummaC",
