@@ -313,7 +313,7 @@ class ModelTuner:
                            f"{epochs_trained = }\n")
 
         while (epochs_trained := self.get_epochs_trained(output_dir)) < epochs_needed:
-            self._logger.info(f"\nEpoch: {epochs_trained}/{epochs_needed}")
+            self._logger.info(f"\nTrained epochs: {epochs_trained}/{epochs_needed}")
 
             # Calculate dataset split
             split_begin = int(epochs_trained % split_epochs * data_split * 100)
