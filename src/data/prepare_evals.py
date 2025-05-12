@@ -47,7 +47,7 @@ def process_ckpt(feather_path, data_files):
     filename = os.path.splitext(feather_path)[0]
     output_path = filename + ".jsonl"
 
-    ckpt_df = pd.read_feather(feather_path)
+    ckpt_df = pd.read_feather(feather_path)["train"]
     dataset_df = load_dataset(
         "whopriyam2/SUWMIT-dataset", data_files=data_files, split="validation"
     ).to_pandas()
@@ -66,11 +66,8 @@ def process_ckpt(feather_path, data_files):
 
 def main():
     for feather_path, config in DATASET_CONFIGS.items():
-        try:
-            output_path = process_ckpt(feather_path, **config)
-            print(f"Processed {feather_path} -> {output_path}")
-        except Exception as e:
-            print(f"Error processing {feather_path}: {e}")
+        output_path = process_ckpt(feather_path, **config)
+        print(f"Processed {feather_path} -> {output_path}")
 
 
 if __name__ == "__main__":
