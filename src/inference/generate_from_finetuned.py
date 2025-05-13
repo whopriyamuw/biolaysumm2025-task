@@ -87,13 +87,13 @@ MODEL_CONFIGS = {
         "adapter_path": "/gscratch/stf/yongsinp/biolaysumm2025-task/models/finetuned_whopriyam2_SUWMIT_dataset_abstract_only_summaries_train_elife_abstracts_llama_3.1_8b_instruct/epoch_5",
         "output_path": "/gscratch/scrubbed/jcols/generated_summaries/finetuned_abstract_only_{split}_elife_BioBERT.jsonl",
         "checkpoint_path": "/gscratch/scrubbed/jcols/generated_summaries/finetuned_abstract_only_{split}_elife_BioBERT.ckpt",
-        "dataset_split": "abstract_only_summaries/{split}_elife_abstracts.csv",
+        "dataset_split": "abstract_only_summaries(w:articles)/{split}_elife_abstracts.csv",
     },
     "plos_abstract_only": {
         "adapter_path": "/gscratch/stf/yongsinp/biolaysumm2025-task/models/finetuned_whopriyam2_SUWMIT_dataset_abstract_only_summaries_train_plos_abstracts_llama_3.1_8b_instruct/epoch_5",
         "output_path": "/gscratch/scrubbed/jcols/generated_summaries/finetuned_abstract_only_{split}_plos_BioBERT.jsonl.jsonl",
         "checkpoint_path": "/gscratch/scrubbed/jcols/generated_summaries/finetuned_abstract_only_{split}_plos_BioBERT.jsonl.ckpt",
-        "dataset_split": "abstract_only_summaries/{split}_plos_abstracts.csv",
+        "dataset_split": "abstract_only_summaries(w:articles)/{split}_plos_abstracts.csv",
     },
 }
 
