@@ -21,6 +21,15 @@ MODEL_CONFIGS = {
         "batch_size": 1,
         "max_new_tokens": 384,
     },
+    "plos_fulltext_256tokens": {
+        "adapter_path": "/mmfs1/home/yongsinp/stf/biolaysumm2025-task/models/finetuned_whopriyam2_SUWMIT_dataset_extractive_length_20_train_plos_BioBERT_llama_3.1_8b_instruct_with_dev/epoch_9",
+        "output_path": "/gscratch/stf/jcols/biolaysum_summaries/finetuned_fulltext_256tokens_{split}_plos.jsonl",
+        "checkpoint_path": "/gscratch/stf/jcols/biolaysum_summaries/finetuned_fulltext_256tokens_{split}_plos.ckpt",
+        "dataset_split": "extractive/length_20/{split}_plos_BioBERT.csv",
+        "input_field": "article",
+        "batch_size": 1,
+        "max_new_tokens": 256,
+    },
 }
 
 
