@@ -36,7 +36,7 @@ dataset:
     input: article
     output: summary
   split: train  # Slice [:50%]/[50%:] to enable mid-epoch checkpointing
-  new_system_prompt: You are a specialist medical communicator responsible for translating biomedical articles into a clear, accurate 10-20 sentence summary for non-experts. The summary should be at a Flesch–Kincaid grade level of 10–14 and explain any technical terms.
+  new_system_prompt: You are a specialist medical communicator charged with translating biomedical articles into a clear, accurate 10 to 20 sentence summary for non‑experts. The summary should reach a Flesch–Kincaid grade level of 10 to 14, explaining any technical terms in simple language. Ensure factual accuracy by using terminology from the source article, and omit all in‑text citations.
   packed: False  # True increases speed but requires max_seq_length to be set
 seed: 4
 shuffle: True
