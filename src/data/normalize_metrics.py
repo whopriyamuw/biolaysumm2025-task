@@ -5,7 +5,7 @@ import pandas as pd
 from utils import REPORTS_ROOT
 
 # define path to json files
-folder_path = os.path.join(REPORTS_ROOT, "evals")
+folder_path = os.path.join(REPORTS_ROOT, "evals", "elife")
 all_evals = {}
 
 # load scores
