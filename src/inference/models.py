@@ -70,6 +70,7 @@ class LlamaSummarizer:
         input_field: str = "article",
         max_new_tokens: int = 384,
         prompt_version: str = "base",
+        decoding: str = "dola",
         base_model: str = "meta-llama/Meta-Llama-3.1-8B-Instruct",
     ):
         self._summaries = []
@@ -77,6 +78,7 @@ class LlamaSummarizer:
         self._model_id = base_model
         self._model = None
         self._tokenizer = None
+        self._decoding = decoding
         self._chat_template_config = {
             "tokenize": False,
             "add_generation_prompt": False,
@@ -114,6 +116,24 @@ class LlamaSummarizer:
 
         return torch.device("cpu")
 
+    def _get_decoding_config(self) -> dict:
+        decoding_config = {
+            "dola": {
+                "do_sample": False,
+                "dola_layers": "low",  # https://arxiv.org/abs/2309.03883
+            },
+            "beam": {
+                "do_sample": False,
+                "early_stopping": True,
+                "min_new_tokens": 100,
+                "no_repeat_ngram_size": 3,
+                "num_beams": 5,
+                "num_return_sequences": 1,
+            },
+        }
+
+        return decoding_config.get(self._decoding, {})
+
     def _load_model(self):
         # https://github.com/huggingface/huggingface-llama-recipes
         torch.set_float32_matmul_precision("high")
@@ -126,9 +146,9 @@ class LlamaSummarizer:
             self._model_id,
             torch_dtype=self._dtype,
         )
+
         self._model.generation_config = GenerationConfig(
-            do_sample=False,
-            dola_layers="low",  # https://arxiv.org/abs/2309.03883
+            **self._get_decoding_config(),
             max_new_tokens=self.max_new_tokens,
             bos_token_id=self._tokenizer.bos_token_id,
             eos_token_id=self._model.generation_config.eos_token_id,

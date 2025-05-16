@@ -41,6 +41,26 @@ MODEL_CONFIGS = {
         "max_new_tokens": 384,
         "prompt_version": "factuality",
     },
+    "elife_fulltext_beam": {
+        "adapter_path": "/gscratch/stf/yongsinp/biolaysumm2025-task/models/finetuned_whopriyam2_SUWMIT_dataset_extractive_length_20_train_elife_BioBERT_llama_3.1_8b_instruct_with_dev/epoch_7",
+        "output_path": "/gscratch/stf/jcols/biolaysum_summaries/finetuned_fulltext_beam_{split}_elife.jsonl",
+        "checkpoint_path": "/gscratch/stf/jcols/biolaysum_summaries/finetuned_fulltext_beam_{split}_elife.ckpt",
+        "dataset_split": "extractive/length_20/{split}_elife_BioBERT.csv",
+        "input_field": "article",
+        "batch_size": 1,
+        "max_new_tokens": 384,
+        "decoding": "beam",
+    },
+    "plos_fulltext_beam": {
+        "adapter_path": "/gscratch/stf/yongsinp/biolaysumm2025-task/models/finetuned_whopriyam2_SUWMIT_dataset_extractive_length_20_train_plos_BioBERT_llama_3.1_8b_instruct_with_dev/epoch_19",
+        "output_path": "/gscratch/stf/jcols/biolaysum_summaries/finetuned_fulltext_beam_{split}_plos.jsonl",
+        "checkpoint_path": "/gscratch/stf/jcols/biolaysum_summaries/finetuned_fulltext_beam_{split}_plos.ckpt",
+        "dataset_split": "extractive/length_20/{split}_plos_BioBERT.csv",
+        "input_field": "article",
+        "batch_size": 1,
+        "max_new_tokens": 384,
+        "decoding": "beam",
+    },
 }
 
 
