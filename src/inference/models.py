@@ -26,10 +26,7 @@ class Prompts(Enum):
 
     @staticmethod
     def assistant(version: str) -> str:
-        if version in {"base", "cot"}:
-            return "Lay Summary:"
-
-        raise NotImplementedError
+        return "Lay Summary:"
 
     @staticmethod
     def system(version: str) -> str:
@@ -56,6 +53,9 @@ class Prompts(Enum):
                 Step 3: Revise your summary as needed to improve factual accuracy and clarity. Output the corrected final version enclosed within <R> and </R> tags.
                 """
             )
+
+        if version == "factuality":
+            return "You are a specialist medical communicator responsible for translating biomedical articles into a clear, accurate 10 to 20 sentence summary for non‑experts. The summary should have a Flesch–Kincaid grade level of 10 to 14, explaining any technical terms in simple language. Ensure factual accuracy by using terminology from the source article, and omit all in‑text citations."
 
         raise NotImplementedError
 
@@ -93,6 +93,8 @@ class LlamaSummarizer:
 
         self.dataset = self._load_dataset(dataset, split)
         self._load_model()
+
+        print(f"Running inference with config: {self.__dict__}")
 
     @classmethod
     def _load_dataset(cls, dataset: str, split: str):

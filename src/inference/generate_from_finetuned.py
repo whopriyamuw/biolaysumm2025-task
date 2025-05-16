@@ -21,25 +21,42 @@ MODEL_CONFIGS = {
         "batch_size": 1,
         "max_new_tokens": 384,
     },
+    "elife_fulltext_factuality": {
+        "adapter_path": "/gscratch/scrubbed/yongsinp/biolaysumm2025-task/models/finetuned_whopriyam2_SUWMIT_dataset_extractive_length_20_train_elife_BioBERT_llama_3.1_8b_instruct_with_dev/epoch_7",
+        "output_path": "/gscratch/stf/jcols/biolaysum_summaries/finetuned_fulltext_{split}_elife_factuality.jsonl",
+        "checkpoint_path": "/gscratch/stf/jcols/biolaysum_summaries/finetuned_fulltext_{split}_elife_factuality.ckpt",
+        "dataset_split": "extractive/length_20/{split}_elife_BioBERT.csv",
+        "input_field": "article",
+        "batch_size": 1,
+        "max_new_tokens": 384,
+        "prompt_version": "factuality",
+    },
+    "plos_fulltext_factuality": {
+        "adapter_path": "/gscratch/scrubbed/yongsinp/biolaysumm2025-task/models/finetuned_whopriyam2_SUWMIT_dataset_extractive_length_20_train_plos_BioBERT_llama_3.1_8b_instruct_with_dev/epoch_19",
+        "output_path": "/gscratch/stf/jcols/biolaysum_summaries/finetuned_fulltext_{split}_plos_factuality.jsonl",
+        "checkpoint_path": "/gscratch/stf/jcols/biolaysum_summaries/finetuned_fulltext_{split}_plos_factuality.ckpt",
+        "dataset_split": "extractive/length_20/{split}_plos_BioBERT.csv",
+        "input_field": "article",
+        "batch_size": 1,
+        "max_new_tokens": 384,
+        "prompt_version": "factuality",
+    },
 }
 
 
-def main(config: dict, split: str):
-    kwargs = {
-        "batch_size": config.get("batch_size", 8),
-        "checkpoint_path": config["checkpoint_path"].format(split=split),
-        "dataset": config["dataset"],
-        "input_field": config.get("input_field", "extracted_summary"),
-        "max_new_tokens": config.get("max_new_tokens", 384),
-        "split": config["dataset_split"].format(split=split),
-    }
+def main(model_name: str, split: str):
+    config = MODEL_CONFIGS[model_name]
+    config = {**config, "dataset": "suwmit"}
 
-    if "base_model" in config:
-        kwargs["base_model"] = config["base_model"]
+    for key in ["checkpoint_path", "output_path", "dataset_split"]:
+        if key in config:
+            config[key] = config[key].format(split=split)
 
-    summarizer = LlamaSummarizerTuned(config["adapter_path"], **kwargs)
+    adapter_path = config.pop("adapter_path")
+
+    summarizer = LlamaSummarizerTuned(adapter_path, **config)
     summarizer.generate()
-    summarizer.save(config["output_path"].format(split=split))
+    summarizer.save(config["output_path"])
 
 
 if __name__ == "__main__":
@@ -56,4 +73,4 @@ if __name__ == "__main__":
         "--split", type=str, default="validation", choices=["validation", "test"]
     )
     args = parser.parse_args()
-    main({**MODEL_CONFIGS[args.model_name], "dataset": "suwmit"}, args.split)
+    main(args.model_name, args.split)
