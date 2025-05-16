@@ -47,7 +47,6 @@ MODEL_CONFIGS = {
 def main(model_name: str, split: str):
     config = MODEL_CONFIGS[model_name]
     config = {**config, "dataset": "suwmit"}
-    config["split"] = config.pop("dataset_split")
 
     for key in ["checkpoint_path", "output_path", "dataset_split"]:
         if key in config:
@@ -55,6 +54,7 @@ def main(model_name: str, split: str):
 
     output_path = config.pop("output_path")
     adapter_path = config.pop("adapter_path")
+    config["split"] = config.pop("dataset_split")
 
     summarizer = LlamaSummarizerTuned(adapter_path, **config)
     summarizer.generate()
