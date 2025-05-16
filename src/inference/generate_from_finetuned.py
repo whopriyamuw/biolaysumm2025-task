@@ -52,11 +52,12 @@ def main(model_name: str, split: str):
         if key in config:
             config[key] = config[key].format(split=split)
 
+    output_path = config.pop("output_path")
     adapter_path = config.pop("adapter_path")
 
     summarizer = LlamaSummarizerTuned(adapter_path, **config)
     summarizer.generate()
-    summarizer.save(config["output_path"])
+    summarizer.save(output_path)
 
 
 if __name__ == "__main__":

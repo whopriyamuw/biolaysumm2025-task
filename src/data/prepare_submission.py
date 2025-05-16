@@ -4,16 +4,14 @@ import zipfile
 import pandas as pd
 
 
-def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("elife_file")
-    parser.add_argument("plos_file")
+def read_files(cli_args):
+    elife_df = pd.read_feather(cli_args.elife_file)["summary"]
+    plos_df = pd.read_feather(cli_args.plos_file)["summary"]
 
-    args = parser.parse_args()
+    return elife_df, plos_df
 
-    elife_df = pd.read_feather(args.elife_file)["summary"]
-    plos_df = pd.read_feather(args.plos_file)["summary"]
 
+def create_submission(elife_df, plos_df):
     elife_txt = "elife.txt"
     plos_txt = "plos.txt"
 
@@ -28,6 +26,16 @@ def main():
         zipf.write(plos_txt)
 
     print(f"Successfully created {zip_filename} containing {elife_txt} and {plos_txt}")
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("elife_file")
+    parser.add_argument("plos_file")
+
+    args = parser.parse_args()
+    elife_df, plos_df = read_files(args)
+    create_submission(elife_df, plos_df)
 
 
 if __name__ == "__main__":
