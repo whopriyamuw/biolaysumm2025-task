@@ -6,6 +6,7 @@
 
 #SBATCH --account=stf
 #SBATCH --partition=ckpt-all
+#SBATCH --ntasks-per-node=8
 #SBATCH --gpus-per-node=a40:1
 #SBATCH --mem=192G
 #SBATCH --time=24:00:00
