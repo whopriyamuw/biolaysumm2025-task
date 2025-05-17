@@ -329,6 +329,9 @@ class ModelTuner:
 
             # Wait for the epoch to finish
             while not self.is_epoch_completed(output_dir, epochs_trained):
+                if process.poll() is not None and process.returncode != 0:
+                    self._logger.critical(f"Fine-tuning process terminated with an error: {process.returncode}")
+                    raise RuntimeError("Fine-tuning process failed.")
                 time.sleep(30)
 
             self._logger.info("Terminating fine-tuning process after 1 epoch.")
