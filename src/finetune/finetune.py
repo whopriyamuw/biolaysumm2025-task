@@ -1,5 +1,5 @@
 """
-Script for fine-tuning LLaMa 3.1 8B Instruct model.
+Script for fine-tuning LLaMa 3 Instruct models.
 """
 import argparse
 import copy
@@ -8,14 +8,13 @@ import os
 import re
 import subprocess
 import time
+import torch
+import yaml
 from collections.abc import Mapping
 from datetime import datetime
 from math import ceil
 from pprint import pformat
 from typing import Optional, Union
-
-import torch
-import yaml
 
 from gpus import *
 from paths import *
@@ -43,7 +42,7 @@ def update_config(original: dict, updates: dict) -> dict:
 class ModelTuner:
     _logger = None
 
-    def __init__(self, model: str = MODEL, hf_token: Optional[str] = None):
+    def __init__(self, model: str, hf_token: Optional[str] = None):
         """
         Initializes the ModelTuner class.
 
@@ -97,7 +96,6 @@ class ModelTuner:
 
             # Get device setup
             cls._gpu_count, cls._gpu_model = cls.get_gpus()
-            cls._device_setup = "single" if cls._gpu_count == 1 else "distributed"
 
     @classmethod
     def set_logger_level(cls, level: Union[str, int] = logging.INFO) -> None:
@@ -163,7 +161,7 @@ class ModelTuner:
             raise RuntimeError("No GPU found.")
 
     @classmethod
-    def download_model(cls, model: str = MODEL, hf_token: Optional[str] = None) -> None:
+    def download_model(cls, model: str, hf_token: Optional[str] = None) -> None:
         """
         Downloads the model from Hugging Face.
 
@@ -190,8 +188,7 @@ class ModelTuner:
             ]
             subprocess.run(cmd, check=True)
 
-    @classmethod
-    def create_config(cls, output_dir: str, source: str, train_data: str, dev_data: str, use_dev_data,
+    def create_config(self, model: str, output_dir: str, source: str, train_data: str, dev_data: str, use_dev_data,
                       split_begin: int, split_end: int, epochs: int = 1, batch_size: int = 1,
                       input: Optional[str] = None, output: Optional[str] = None, resume: bool = False) -> str:
         """
@@ -204,20 +201,27 @@ class ModelTuner:
         # Dataset split
         slice = f"{split_begin}%:{split_end}%"
         split = f"train[{slice}]" + (f"+validation[{slice}]" if use_dev_data else "")
-        data_files = {
-            'train': train_data,
-            'validation': dev_data if dev_data else None
-        } if train_data else None
+        if train_data:
+            if dev_data:
+                data_files = {
+                    'train': train_data,
+                    'validation': dev_data if dev_data else None
+                }
+            else:
+                data_files = train_data
+        else:
+            data_file = None
 
         # Load the default config file
-        default_config_file = CONFIG_FILE.format(cls._device_setup)
+        config_file = "{}{}.yaml"
+        default_config_file = config_file.format(model, "")
         default_config_path = os.path.join(CONFIG_DIR, "torchtune_org", default_config_file)
         with open(default_config_path, 'r') as f:
             default_config = yaml.safe_load(f)
 
         # Create changes to the config
         modifications = {
-            'checkpoint_dir': os.path.join(MODEL_DIR, MODEL.split("/")[-1]),
+            'checkpoint_dir': os.path.join(MODEL_DIR, self._model.split("/")[-1]),
             'output_dir': output_dir,
             'dataset': {
                 'source': source,
@@ -237,16 +241,16 @@ class ModelTuner:
         # Update the default config with the modifications
         new_config = update_config(copy.deepcopy(default_config), modifications)
 
-        cls._logger.debug(f"\n##### Default Config #####\n"
-                          f"{pformat(default_config)}\n\n")
-        cls._logger.debug(f"\n##### Changes #####\n"
-                          f"{pformat(modifications)}\n\n")
-        cls._logger.debug(f"\n##### New Config #####\n"
-                          f"{pformat(new_config)}\n\n")
+        self._logger.debug(f"\n##### Default Config #####\n"
+                           f"{pformat(default_config)}\n\n")
+        self._logger.debug(f"\n##### Changes #####\n"
+                           f"{pformat(modifications)}\n\n")
+        self._logger.debug(f"\n##### New Config #####\n"
+                           f"{pformat(new_config)}\n\n")
 
         # Save the new config to a file
         new_config_dir = os.path.join(CONFIG_DIR, "torchtune_run")
-        new_config_file = CONFIG_FILE.format(f"{cls._device_setup}_{datetime.now().strftime('%Y%m%d_%H%M%S')}")
+        new_config_file = output_dir.rsplit('/', maxsplit=1)[-1] + f"_{datetime.now().strftime('%Y%m%d_%H%M%S')}.yaml"
         new_config_path = os.path.join(new_config_dir, new_config_file)
         os.makedirs(new_config_dir, exist_ok=True)
         with open(new_config_path, 'w') as file:
@@ -287,8 +291,10 @@ class ModelTuner:
         format_name = lambda s: s.translate(str.maketrans("/\\-", "___"))
         dataset = format_name(source) + (f"_{format_name(train_data).rsplit('.', maxsplit=1)[0]}" if train_data else "")
         use_dev_data = use_dev_data or dev_data
-        output_dir = os.path.join(MODEL_DIR, f"finetuned_{dataset}" + ("_with_dev" if use_dev_data else ""))
+        model = self._model.split('/')[-1].lower().replace("-", "_")
+        output_dir = os.path.join(MODEL_DIR, f"finetuned_{dataset}_{model}" + ("_with_dev" if use_dev_data else ""))
 
+        # Todo: Halve batch size for the 70B model
         # Batch size
         batch_size = GPUS[self._gpu_model].batch_size if batch_size == -1 else batch_size
 
@@ -307,14 +313,14 @@ class ModelTuner:
                            f"{epochs_trained = }\n")
 
         while (epochs_trained := self.get_epochs_trained(output_dir)) < epochs_needed:
-            self._logger.info(f"\nEpoch: {epochs_trained}/{epochs_needed}")
+            self._logger.info(f"\nTrained epochs: {epochs_trained}/{epochs_needed}")
 
             # Calculate dataset split
             split_begin = int(epochs_trained % split_epochs * data_split * 100)
             split_end = int(min(split_begin + data_split * 100, 100))
 
             # Create a new config for fine-tuning
-            new_config_path = self.create_config(output_dir, source, train_data, dev_data, use_dev_data,
+            new_config_path = self.create_config(model, output_dir, source, train_data, dev_data, use_dev_data,
                                                  split_begin, split_end, epochs_needed, batch_size,
                                                  input, output, resume=bool(epochs_trained))
 
@@ -323,6 +329,9 @@ class ModelTuner:
 
             # Wait for the epoch to finish
             while not self.is_epoch_completed(output_dir, epochs_trained):
+                if process.poll() is not None and process.returncode != 0:
+                    self._logger.critical(f"Fine-tuning process terminated with an error: {process.returncode}")
+                    raise RuntimeError("Fine-tuning process failed.")
                 time.sleep(30)
 
             self._logger.info("Terminating fine-tuning process after 1 epoch.")
@@ -333,29 +342,35 @@ class ModelTuner:
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Script for fine-tuning LLaMa 3.1 8B Instruct model.")
+    parser = argparse.ArgumentParser(description="Script for fine-tuning LLaMa 3 Instruct models.")
 
     # Dataset arguments
+    # Dataset to use
     parser.add_argument('--source', type=str, default='whopriyam2/SUWMIT-dataset',
                         help='Path or name of the dataset (default: whopriyam2/SUWMIT-dataset')
+    # Columns to use for training
+    parser.add_argument('--input', type=str, default='article',
+                        help='Input column for the model (default: article)')
+    parser.add_argument('--output', type=str, default='summary',
+                        help='Target output column for the model (default: summary)')
+    # Files to use for training
     parser.add_argument('--train-data', type=str, default=None,
                         help='Path(s) to train data file (default: None)')
     parser.add_argument('--dev-data', type=str, default=None,
                         help='Path(s) to dev data file (default: None)')
     parser.add_argument('--use-dev-data', type=bool, default=False,
                         help='Include dev data for training (default: False)')
-    parser.add_argument('--input', type=str, default='article',
-                        help='Input column for the model (default: article)')
-    parser.add_argument('--output', type=str, default='summary',
-                        help='Target output column for the model (default: summary)')
 
     # Training arguments
+    parser.add_argument('--model', type=str, default='3.1-8B',
+                        choices=['3.1-8B', '3.3-70B'],
+                        help='Name of the model to train (default: 3.1-8B)')
     parser.add_argument('--epochs', type=int, default=1,
                         help='Epochs to train the model (default: 1)')
     parser.add_argument('--data-split', type=float, default=-1,
-                        help='Data split for training (default: -1, automatically calculated based on GPU model and number)')
+                        help='Data split for training (0.0, 1.0] (default: -1, automatically calculated based on GPU model and number)')
     parser.add_argument('--batch-size', type=int, default=-1,
-                        help='Batch size for training (default: -1, automatically set based on GPU model)')
+                        help='Batch size for training [1,] (default: -1, automatically set based on GPU model)')
 
     # Logging arguments
     parser.add_argument('--log-level', type=str, default='INFO',
@@ -364,10 +379,13 @@ def main():
 
     args = parser.parse_args()
 
-    tuner = ModelTuner()
+    # Initialize and run the ModelTuner
+    model = "meta-llama/Llama-{}-Instruct".format(args.model)
+    tuner = ModelTuner(model)
     tuner.set_logger_level(args.log_level)
-    tuner.finetune(args.source, args.train_data, args.dev_data, args.use_dev_data, args.epochs, args.batch_size,
-                   args.data_split, args.input, args.output)
+    tuner.finetune(args.source, args.train_data, args.dev_data, args.use_dev_data,
+                   args.epochs, args.batch_size, args.data_split,
+                   args.input, args.output)
 
 
 if __name__ == "__main__":
