@@ -6,7 +6,7 @@
 #SBATCH --account=stf
 #SBATCH --partition=ckpt-all
 #SBATCH --nodes=1
-#SBATCH --gpus-per-node=a100:1
+#SBATCH --gpus-per-node=a40:1
 #SBATCH --mem=64G
 #SBATCH --time=8:00:00
 
@@ -18,4 +18,4 @@
 eval "$(conda shell.bash hook)"
 conda activate inference
 
-python generate_from_finetuned.py --model-name elife_fulltext_factuality_beam --split test
+python generate_from_finetuned.py --model-name elife_fulltext_dola --split validation

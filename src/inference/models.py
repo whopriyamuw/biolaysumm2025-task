@@ -130,6 +130,7 @@ class LlamaSummarizer:
                 "num_beams": 5,
                 "num_return_sequences": 1,
             },
+            "greedy": {},
         }
 
         return decoding_config.get(self._decoding, {})
