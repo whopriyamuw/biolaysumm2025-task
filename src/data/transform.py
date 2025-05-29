@@ -257,9 +257,8 @@ class ArticleTransformer:
             print(f"Failed to upload to HuggingFace Hub: {str(e)}")
 
     def _save_multiple(self, df=None):
-        single = df.copy() if df is not None else None
-
         for n in self.extractive_lengths:
+            single = df.copy() if df is not None else None
             if single is not None:
                 single.rename(
                     columns={f"extracted_summary_{n}": "transformed"}, inplace=True
