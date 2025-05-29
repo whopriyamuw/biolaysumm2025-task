@@ -1,15 +1,19 @@
+"""Script to postprocess generated summaries by cleaning up formatting and removing incomplete sentences."""
+
 import argparse
 import re
 
 from .prepare_submission import read_files, create_submission
 
 
-def remove_brackets(text):
+def remove_brackets(text: str) -> str:
+    """Remove text within brackets, braces, and square brackets."""
     text = re.sub(r"\([^()]*\)|\{[^{}]*\}|\[[^\[\]]*\]", "", text)
     return text
 
 
-def remove_cutoff_sentences(text):
+def remove_cutoff_sentences(text: str) -> str:
+    """Remove incomplete sentences at the end of the text."""
     if text.endswith("."):
         return text
 
