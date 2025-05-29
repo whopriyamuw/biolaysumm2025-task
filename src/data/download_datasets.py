@@ -1,23 +1,33 @@
-"""Script to download datasets"""
+"""Script to download the BioLaySumm2025 datasets."""
 
 import os.path
-
 from datasets import load_dataset
 from utils import DATA_ROOT
 
-# Load the dataset (make sure you're logged in if it's gated)
-ds1 = load_dataset("BioLaySumm/BioLaySumm2025-PLOS")
-ds2 = load_dataset("BioLaySumm/BioLaySumm2025-eLife")
+def download_and_save_dataset(dataset_name: str, output_dir: str):
+    """Download a dataset and save it as CSV files for each split."""
 
-# Specify the local directory for export
-output_dir1 = os.path.join(DATA_ROOT, "raw", "plos")
-output_dir2 = os.path.join(DATA_ROOT, "raw", "elife")
+    os.makedirs(output_dir, exist_ok=True)
+    dataset = load_dataset(dataset_name)
+    
+    # Save each split as a CSV file
+    for split_name, split_data in dataset.items():
+        output_path = os.path.join(output_dir, f"{split_name}.csv")
+        split_data.to_csv(output_path, index=False)
+        print(f"Saved {split_name} split to {output_path}")
 
-os.makedirs(output_dir1, exist_ok=True)
-os.makedirs(output_dir2, exist_ok=True)
+def main():
+    """Main function to download and process both datasets."""
 
-for split in ds1:
-    ds1[split].to_csv(f"{output_dir1}/{split}.csv", index=False)
+    datasets = {
+        "BioLaySumm/BioLaySumm2025-PLOS": os.path.join(DATA_ROOT, "raw", "plos"),
+        "BioLaySumm/BioLaySumm2025-eLife": os.path.join(DATA_ROOT, "raw", "elife")
+    }
+    
+    # Download and save each dataset
+    for dataset_name, output_dir in datasets.items():
+        print(f"\nProcessing dataset: {dataset_name}")
+        download_and_save_dataset(dataset_name, output_dir)
 
-for split in ds2:
-    ds2[split].to_csv(f"{output_dir2}/{split}.csv", index=False)
+if __name__ == "__main__":
+    main()

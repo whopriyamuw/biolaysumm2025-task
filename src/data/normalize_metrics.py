@@ -1,68 +1,86 @@
+"""Script to normalize and analyze evaluation metrics from JSON files."""
+
 import json
 import os
-import pandas as pd
+from typing import Dict
 
+import pandas as pd
 from utils import REPORTS_ROOT
 
-# define path to json files
-folder_path = os.path.join(REPORTS_ROOT, "evals", "elife")
-all_evals = {}
 
-# load scores
-for filename in os.listdir(folder_path):
-    if filename.endswith(".json"):
-        dict_name = os.path.splitext(filename)[0]
-        filepath = os.path.join(folder_path, filename)
+def load_evaluation_files(folder_path: str) -> Dict[str, Dict]:
+    """Load all JSON evaluation files from the specified folder."""
+    evaluations = {}
+    for filename in os.listdir(folder_path):
+        if filename.endswith(".json"):
+            model_name = os.path.splitext(filename)[0]
+            filepath = os.path.join(folder_path, filename)
+            
+            with open(filepath, "r") as f:
+                evaluations[model_name] = json.load(f)
+    
+    return evaluations
 
-        with open(filepath, "r") as f:
-            all_evals[dict_name] = json.load(f)
 
-df = pd.DataFrame.from_dict(all_evals, orient="index")
+def normalize_metrics(df: pd.DataFrame) -> pd.DataFrame:
+    """Normalize metrics in the dataframe."""
+    df_normalized = df.copy()
+    reverse_metrics = ["FKGL", "DCRS", "CLI"]
+    
+    for col in df.columns:
+        if col in reverse_metrics:
+            # For metrics where lower is better
+            df_normalized[col] = (df[col].max() - df[col]) / (df[col].max() - df[col].min())
+        else:
+            # For metrics where higher is better
+            df_normalized[col] = (df[col] - df[col].min()) / (df[col].max() - df[col].min())
+    
+    return df_normalized
 
-# define reversed metrics
-reverse_normalize_metrics = ["FKGL", "DCRS", "CLI"]
-df_normalized = df.copy()
-for col in df.columns:
-    if col in reverse_normalize_metrics:
-        # reversed metrics
-        df_normalized[col] = (df[col].max() - df[col]) / (df[col].max() - df[col].min())
-    else:
-        # other metrics
-        df_normalized[col] = (df[col] - df[col].min()) / (df[col].max() - df[col].min())
 
-# get category averages
-df_normalized["AVGFACT"] = df_normalized[["ROUGE", "BLEU", "METEOR", "BERTScore"]].mean(
-    axis=1
-)
-df_normalized["AVGRD"] = df_normalized[["FKGL", "DCRS", "CLI", "LENS"]].mean(axis=1)
-df_normalized["AVGREL"] = df_normalized[["AlignScore", "SummaC"]].mean(axis=1)
-df_normalized["TOTAVG"] = df_normalized[["AVGFACT", "AVGRD", "AVGREL"]].mean(axis=1)
+def calculate_category_averages(df: pd.DataFrame) -> pd.DataFrame:
+    """Calculate average scores for each metric category."""
+    df["AVGFACT"] = df[["ROUGE", "BLEU", "METEOR", "BERTScore"]].mean(axis=1)
+    df["AVGRD"] = df[["FKGL", "DCRS", "CLI", "LENS"]].mean(axis=1)
+    df["AVGREL"] = df[["AlignScore", "SummaC"]].mean(axis=1)
+    df["TOTAVG"] = df[["AVGFACT", "AVGRD", "AVGREL"]].mean(axis=1)
+    
+    return df
 
-# sort by total average
-df_normalized = df_normalized.sort_values(by="TOTAVG", ascending=False)
 
-# define column order
-column_order = [
-    "ROUGE",
-    "BLEU",
-    "METEOR",
-    "BERTScore",
-    "AVGFACT",
-    "FKGL",
-    "DCRS",
-    "CLI",
-    "LENS",
-    "AVGRD",
-    "AlignScore",
-    "SummaC",
-    "AVGREL",
-    "TOTAVG",
-]
-df_normalized = df_normalized[column_order]
+def main():
+    """Main function to process and normalize evaluation metrics."""
+    # Load evaluation files
+    folder_path = os.path.join(REPORTS_ROOT, "evals", "elife")
+    evaluations = load_evaluation_files(folder_path)
+    
+    # Convert to DataFrame
+    df = pd.DataFrame.from_dict(evaluations, orient="index")
+    
+    # Normalize metrics
+    df_normalized = normalize_metrics(df)
+    
+    # Calculate category averages
+    df_normalized = calculate_category_averages(df_normalized)
+    
+    # Sort by total average
+    df_normalized = df_normalized.sort_values(by="TOTAVG", ascending=False)
+    
+    # Define and apply column order
+    column_order = [
+        "ROUGE", "BLEU", "METEOR", "BERTScore", "AVGFACT",
+        "FKGL", "DCRS", "CLI", "LENS", "AVGRD",
+        "AlignScore", "SummaC", "AVGREL", "TOTAVG"
+    ]
+    df_normalized = df_normalized[column_order]
+    
+    # Save results
+    output_file = "normalized_metrics.txt"
+    with open(output_file, "w") as f:
+        f.write(df_normalized.to_string())
+    
+    print(df_normalized)
 
-# write to file
-output_file_txt = "normalized_metrics.txt"
-with open(output_file_txt, "w") as f:
-    f.write(df_normalized.to_string())
 
-print(df_normalized)
+if __name__ == "__main__":
+    main()
