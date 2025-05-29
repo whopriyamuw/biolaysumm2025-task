@@ -61,6 +61,19 @@ class ArticleTransformer:
         self._source_dataset, self._source_dataset_split = dataset, split
         self.dataset = load_dataset(HfDatasets[dataset].value, split=split).to_pandas()
 
+        self.nlp = None
+        self.sentence_model = None
+        if transform_options.extract:
+            print("Loading spaCy model...")
+            self.nlp = spacy.load("en_core_web_sm")
+            self.nlp.add_pipe("textrank")
+
+            print("Loading BioBERT model...")
+            self.sentence_model = SentenceTransformer(
+                "pritamdeka/BioBERT-mnli-snli-scinli-scitail-mednli-stsb",
+                device=self.device,
+            )
+
     @staticmethod
     def _get_device() -> str:
         if torch.cuda.is_available():
@@ -143,17 +156,7 @@ class ArticleTransformer:
         if not isinstance(text, str) or not text.strip():
             return []
 
-        print("Loading spaCy model...")
-        nlp = spacy.load("en_core_web_sm")
-        nlp.add_pipe("textrank")
-
-        print("Loading BioBERT model...")
-        model = SentenceTransformer(
-            "pritamdeka/BioBERT-mnli-snli-scinli-scitail-mednli-stsb",
-            device=self.device,
-        )
-
-        doc = nlp(text)
+        doc = self.nlp(text)
         textrank_sents = [
             sent.text.strip() for sent in doc._.textrank.summary(limit_sentences=80)
         ]
@@ -161,8 +164,10 @@ class ArticleTransformer:
         if not textrank_sents:
             return []
 
-        sentence_embeddings = model.encode(textrank_sents, convert_to_tensor=True)
-        doc_embedding = model.encode(text, convert_to_tensor=True)
+        sentence_embeddings = self.sentence_model.encode(
+            textrank_sents, convert_to_tensor=True
+        )
+        doc_embedding = self.sentence_model.encode(text, convert_to_tensor=True)
 
         similarities = (
             util.cos_sim(sentence_embeddings, doc_embedding).squeeze().cpu().numpy()
