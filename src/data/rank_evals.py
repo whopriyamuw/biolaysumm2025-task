@@ -1,4 +1,4 @@
-"""Script to normalize and analyze evaluation metrics from JSON files."""
+"""Script to normalize and rank evaluation results from JSON files."""
 
 import json
 import os
@@ -90,7 +90,7 @@ def main():
     df_normalized = df_normalized[column_order]
 
     # Save results
-    output_file = "normalized_metrics.txt"
+    output_file = os.path.join(REPORTS_ROOT, "evals", "rank.txt")
     with open(output_file, "w") as f:
         f.write(df_normalized.to_string())
 
