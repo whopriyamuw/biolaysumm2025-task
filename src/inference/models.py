@@ -102,7 +102,6 @@ class LlamaSummarizer:
     def _load_dataset(cls, dataset: str, split: str):
         if dataset == HfDatasets.suwmit.name:
             return load_dataset(HfDatasets[dataset].value, data_files=split)["train"]
-            # return load_dataset(HfDatasets[dataset].value, split)["validation"]
 
         return load_dataset(HfDatasets[dataset].value)[split]
 
