@@ -828,10 +828,10 @@ color: violet
     <tr class="bg-yellow-100">
         <td>Full-text</td>
         <td>--</td>
-        <td>0.954173</td>
+        <td><strong>0.954173</strong></td>
         <td>0.935548</td>
-        <td>0.382233</td>
-        <td>0.757318</td>
+        <td><strong>0.382233</strong></td>
+        <td><strong>0.757318</strong></td>
     </tr>
     <tr>
         <td>Our Baseline</td>
@@ -839,14 +839,22 @@ color: violet
         <td>0.906905</td>
         <td><strong>0.958134</strong></td>
         <td>0.361242</td>
-        <td><strong>0.742094</strong></td>
+        <td>0.742094</td>
+    </tr>
+    <tr>
+        <td>Full-text<sub>post</sub></td>
+        <td>--</td>
+        <td>0.937714</td>
+        <td>0.748157</td>
+        <td>0.381944</td>
+        <td>0.689272</td>
     </tr>
     <tr>
         <td>Abs</td>
         <td>--</td>
         <td>0.815440</td>
         <td>0.789736</td>
-        <td><strong>0.372712</strong></td>
+        <td>0.372712</td>
         <td>0.659296</td>
     </tr>
     <tr>
@@ -857,17 +865,18 @@ color: violet
         <td>0.299148</td>
         <td>0.651199</td>
     </tr>
-    <tr>
-        <td>Full-text<sub>post</sub></td>
-        <td>--</td>
-        <td>0.3842</td>
-        <td>8.5227</td>
-        <td>0.2867</td>
-        <td>0.8587</td>
-    </tr>
     </tbody>
 </table>
 </div>
+
+<v-click>
+
+**Observations:**
+
+1. The **full-text** model trades lower ↓`readability` for better ↑`factuality`.
+2. Preprocessing and post-processing **decreased** performance.
+
+</v-click>
 
 ---
 layout: top-title
@@ -882,7 +891,7 @@ color: violet
 
 <div class="text-center">
 
-**Normalized** scores of the **decoding** experiments on `eLife` validation.
+**Full-text** model scores using different **decoding** strategies on the validation splits *(sorted)*
 
 </div>
 
@@ -891,7 +900,7 @@ color: violet
     <thead>
     <tr class="divide-x divide-zinc-300 bg-zinc-100">
         <th class="text-center">MODEL</th>
-        <th class="text-center">K</th>
+        <th class="text-center">RUNTIME</th>
         <th class="text-center">RELEVANCE</th>
         <th class="text-center">READABILITY</th>
         <th class="text-center">FACTUALITY</th>
