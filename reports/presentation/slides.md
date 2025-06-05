@@ -58,11 +58,11 @@ color: violet
 
 <div class="flex flex-col items-center gap-4 font-mono">
 
-> In temperate climates , winter <span class="neversink-orange-light-scheme ns-c-bind-scheme rounded">deaths exceed</span> summer ones . However , there is <span class="neversink-sky-light-scheme ns-c-bind-scheme rounded">limited information on the timing</span> and the relative magnitudes of maximum and minimum <span class="neversink-sky-light-scheme ns-c-bind-scheme rounded">mortality</span> , <span class="neversink-red-light-scheme ns-c-bind-scheme rounded">by</span> local climate , age group , sex and medical cause of death . We used geo-coded mortality data and wavelets to analyse the <span class="neversink-violet-light-scheme ns-c-bind-scheme rounded">seasonality of mortality</span> by age group and sex from 1980 to 2016 in the USA and its subnational climatic regions .
+> **Article:** In temperate climates , winter <span class="neversink-orange-light-scheme ns-c-bind-scheme rounded">deaths exceed</span> summer ones . However , there is <span class="neversink-sky-light-scheme ns-c-bind-scheme rounded">limited information on the timing</span> and the relative magnitudes of maximum and minimum <span class="neversink-sky-light-scheme ns-c-bind-scheme rounded">mortality</span> , <span class="neversink-red-light-scheme ns-c-bind-scheme rounded">by</span> local climate , age group , sex and medical cause of death . We used geo-coded mortality data and wavelets to analyse the <span class="neversink-violet-light-scheme ns-c-bind-scheme rounded">seasonality of mortality</span> by age group and sex from 1980 to 2016 in the USA and its subnational climatic regions .
 
 <solar-arrow-down-bold-duotone class="text-4xl" />
 
-> In the USA , <span class="neversink-orange-light-scheme ns-c-bind-scheme rounded">more deaths</span> happen in the winter than the summer . But <span class="neversink-sky-light-scheme ns-c-bind-scheme rounded">when deaths occur</span> <span class="neversink-red-light-scheme ns-c-bind-scheme rounded">varies greatly</span> by sex , age , cause of death , and possibly region . Seasonal differences in death rates can change over time due to changes in factors that cause disease or affect treatment . Analyzing the <span class="neversink-violet-light-scheme ns-c-bind-scheme rounded">seasonality of deaths</span> can help scientists determine whether interventions to minimize deaths during a certain time of year are needed , or whether existing ones are effective .
+> **Summary:** In the USA , <span class="neversink-orange-light-scheme ns-c-bind-scheme rounded">more deaths</span> happen in the winter than the summer . But <span class="neversink-sky-light-scheme ns-c-bind-scheme rounded">when deaths occur</span> <span class="neversink-red-light-scheme ns-c-bind-scheme rounded">varies greatly</span> by sex , age , cause of death , and possibly region . Seasonal differences in death rates can change over time due to changes in factors that cause disease or affect treatment . Analyzing the <span class="neversink-violet-light-scheme ns-c-bind-scheme rounded">seasonality of deaths</span> can help scientists determine whether interventions to minimize deaths during a certain time of year are needed , or whether existing ones are effective .
 
 </div>
 
@@ -71,11 +71,11 @@ color: violet
 
 <div class="flex flex-col items-center gap-4 font-mono">
 
-> In temperate climates , winter deaths exceed summer ones . However , there is limited information on the timing and the relative magnitudes of maximum and minimum mortality , by local climate , age group , sex and medical cause of death . <span class="neversink-amber-light-scheme ns-c-bind-scheme rounded">We used geo-coded mortality data and wavelets to analyse the seasonality of mortality by age group and sex from 1980 to 2016 in the USA and its subnational climatic regions .</span>
+> **Article:** In temperate climates , winter deaths exceed summer ones . However , there is limited information on the timing and the relative magnitudes of maximum and minimum mortality , by local climate , age group , sex and medical cause of death . <span class="neversink-amber-light-scheme ns-c-bind-scheme rounded">We used geo-coded mortality data and wavelets to analyse the seasonality of mortality by age group and sex from 1980 to 2016 in the USA and its subnational climatic regions .</span>
 
 <solar-arrow-down-bold-duotone class="text-4xl" />
 
-> In the USA , more deaths happen in the winter than the summer . But when deaths occur varies greatly by sex , age , cause of death , and possibly region . <span class="neversink-green-light-scheme ns-c-bind-scheme rounded">Seasonal differences in death rates can change over time due to changes in factors that cause disease or affect treatment . Analyzing the seasonality of deaths can help scientists determine whether interventions to minimize deaths during a certain time of year are needed , or whether existing ones are effective . </span><span class="neversink-amber-light-scheme ns-c-bind-scheme rounded">Now , Parks et al . show that there are age and sex differences in which times of year most deaths occur .</span>
+> **Summary:** In the USA , more deaths happen in the winter than the summer . But when deaths occur varies greatly by sex , age , cause of death , and possibly region . <span class="neversink-green-light-scheme ns-c-bind-scheme rounded">Seasonal differences in death rates can change over time due to changes in factors that cause disease or affect treatment . Analyzing the seasonality of deaths can help scientists determine whether interventions to minimize deaths during a certain time of year are needed , or whether existing ones are effective . </span><span class="neversink-amber-light-scheme ns-c-bind-scheme rounded">Now , Parks et al . show that there are age and sex differences in which times of year most deaths occur .</span>
 
 </div>
 
@@ -483,7 +483,7 @@ Metric scores of the **interim** experiments on `eLife` validation
     </thead>
     <tbody>
     <tr>
-        <td>Our Baseline</td>
+        <td><strong>Our Baseline</strong></td>
         <td>40</td>
         <td>0.3792</td>
         <td>8.4205</td>
@@ -573,7 +573,7 @@ color: violet
     </thead>
     <tbody>
     <tr>
-        <td>Our Baseline</td>
+        <td><strong>Our Baseline</strong></td>
         <td>40</td>
         <td>0.906905</td>
         <td><strong>0.958134</strong></td>
@@ -722,7 +722,7 @@ Metric scores of the **final** experiments on `eLife` validation
     </thead>
     <tbody>
     <tr>
-        <td>Baseline</td>
+        <td><strong>Our Baseline</strong></td>
         <td>40</td>
         <td>0.3792</td>
         <td>8.4205</td>
@@ -834,7 +834,7 @@ color: violet
         <td><strong>0.757318</strong></td>
     </tr>
     <tr>
-        <td>Our Baseline</td>
+        <td><strong>Our Baseline</strong></td>
         <td>40</td>
         <td>0.906905</td>
         <td><strong>0.958134</strong></td>
@@ -899,7 +899,7 @@ color: violet
 <table class="table-auto text-xs">
     <thead>
     <tr class="divide-x divide-zinc-300 bg-zinc-100">
-        <th class="text-center">MODEL</th>
+        <th class="text-center">DECODING</th>
         <th class="text-center">RUNTIME</th>
         <th class="text-center">RELEVANCE</th>
         <th class="text-center">READABILITY</th>
@@ -910,31 +910,40 @@ color: violet
     <tbody>
     <tr>
         <td>DoLa</td>
-        <td>40</td>
-        <td>0.906905</td>
-        <td><strong>0.958134</strong></td>
-        <td>0.361242</td>
-        <td><strong>0.742094</strong></td>
+        <td>02:35:41</td>
+        <td>0.982620</td>
+        <td><strong>0.753818</strong></td>
+        <td><strong>0.385602</strong></td>
+        <td><strong>0.707347</strong></td>
     </tr>
     <tr>
         <td>Greedy decoding</td>
-        <td>40</td>
-        <td><strong>0.938622</strong></td>
-        <td>0.773277</td>
-        <td>0.319408</td>
-        <td>0.677102</td>
+        <td>02:17:50</td>
+        <td><strong>0.982856</strong></td>
+        <td>0.751950</td>
+        <td>0.379642</td>
+        <td>0.704816</td>
     </tr>
     <tr>
         <td>Beam search</td>
-        <td>30</td>
-        <td>0.856543</td>
-        <td>0.764911</td>
-        <td>0.358361</td>
-        <td>0.659939</td>
+        <td>07:32:55</td>
+        <td>0.777826</td>
+        <td>0.680998</td>
+        <td>0.075478</td>
+        <td>0.511434</td>
     </tr>
     </tbody>
 </table>
 </div>
+
+<v-click>
+
+**Observations:**
+
+1. **DoLa** improved `factuality` scores without impacting `readability` or `relevance`.
+2. Despite having the longest runtime, **beam search** severely underperformed.
+
+</v-click>
 
 ---
 layout: top-title
@@ -943,11 +952,31 @@ color: violet
 
 :: title ::
 
-# Conclusions
+# Discussion
 
 :: content ::
 
-- TODO
+<v-clicks depth="2">
+
+- Our best model had more **balanced** performance rather than maximizing a single criterion.
+- The full-text model required much **more compute** for a small performance gain over our baseline.
+- Automated metrics enabled fast iteration, but do they truly measure summary quality?
+  - Removing cutoff sentences **decreased** `readability` scores <span class="text-2xl">🤷</span>.
+- Implementation challenges (e.g., GPUs, VRAM optimization) take away from experimental design.
+
+</v-clicks>
+
+<v-click>
+
+—
+
+**Future Work**
+
+- Test more advanced prompting techniques like chain-of-thought (CoT).
+- Expand the pipeline with reinforcement learning strategies, such as Direct Preference Optimization.
+- More fine-grained control over generation, such as varying the summary length for each article.
+
+</v-click>
 
 ---
 layout: center
