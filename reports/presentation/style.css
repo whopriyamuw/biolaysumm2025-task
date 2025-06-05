@@ -1,3 +1,12 @@
 .slidev-layout blockquote {
     border-color: transparent;
 }
+
+.slidev-layout th.text-center {
+    text-align: center;
+    font-weight: 700;
+}
+
+.slidev-layout th.font-light {
+    font-weight: 300;
+}

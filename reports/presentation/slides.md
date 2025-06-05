@@ -35,6 +35,8 @@ color: violet
 
 :: content ::
 
+**Subtask 1.1** - Plain lay summarization.
+
   - Biomedical publications contain the **latest** research on **health**-related topics.
   - **Technical language** makes it **difficult** for non-expert audiences to understand their contents.
 
@@ -43,11 +45,11 @@ color: violet
 
 <div class="flex flex-col items-center gap-4 font-mono">
 
-> In temperate climates , winter deaths exceed summer ones . However , there is limited information on the timing and the relative magnitudes of maximum and minimum mortality , by local climate , age group , sex and medical cause of death . We used geo-coded mortality data and wavelets to analyse the seasonality of mortality by age group and sex from 1980 to 2016 in the USA and its subnational climatic regions .
+> **Article:** In temperate climates , winter deaths exceed summer ones . However , there is limited information on the timing and the relative magnitudes of maximum and minimum mortality , by local climate , age group , sex and medical cause of death . We used geo-coded mortality data and wavelets to analyse the seasonality of mortality by age group and sex from 1980 to 2016 in the USA and its subnational climatic regions .
 
 <solar-arrow-down-bold-duotone class="text-4xl" />
 
-> In the USA , more deaths happen in the winter than the summer . But when deaths occur varies greatly by sex , age , cause of death , and possibly region . Seasonal differences in death rates can change over time due to changes in factors that cause disease or affect treatment . Analyzing the seasonality of deaths can help scientists determine whether interventions to minimize deaths during a certain time of year are needed , or whether existing ones are effective .
+> **Summary:** In the USA , more deaths happen in the winter than the summer . But when deaths occur varies greatly by sex , age , cause of death , and possibly region . Seasonal differences in death rates can change over time due to changes in factors that cause disease or affect treatment . Analyzing the seasonality of deaths can help scientists determine whether interventions to minimize deaths during a certain time of year are needed , or whether existing ones are effective .
 
 </div>
 
@@ -101,8 +103,8 @@ color: violet
 
 **Observations:**
 
-1. *Readability* and summary length **vary** within each dataset.
-2. These variations are significant when **comparing the two** datasets.
+1. *Readability* and *summary length* **vary** within each dataset.
+2. These variations are **significant** when comparing the two datasets.
 
 </v-click>
 
@@ -125,10 +127,21 @@ color: violet
 
 :: content ::
 
+**Turbitt et al., 2023**
+
+- Winners of BioLaySumm 2023.
+- Few-shot prompting using the `text-davinci-003` model from OpenAI.
+- A fine-tuned BioGPT model, 1/100th the size of `text-davinci-003`, showed comparable performance.
+
+<v-click>
+
 **You et al., 2024**
 
-- TODO
+- Winners of BioLaySumm 2024.
+- Extract-then-Summarize method with a fine-tuned GPT-3.5 model.
+- They found that including external knowledge was detrimental for `factuality`.  
 
+</v-click>
 
 ---
 layout: top-title
@@ -137,7 +150,41 @@ color: violet
 
 :: title ::
 
-# Evaluation
+# Related Work
+
+:: content ::
+
+**Modi and Karthikeyan, 2024**
+
+- Best `factuality` scores at BioLaySumm 2024.
+- **Preprocess abstracts** to remove content within parentheses, braces, and brackets.
+
+<v-click>
+
+**Ribeiro et al., 2023**
+
+- 3 generation techniques for fine-grained control over the **readability** of summaries.
+- Instruction-based readability control: *"Summarize this for a middle school student."*
+
+</v-click>
+
+<v-click>
+
+**Chuang et al., 2024**
+
+- Decoding strategy (**DoLa**) that generates the next-token distribution by contrasting the differences in logits across specific layers.
+- Improved **factual** accuracy in question-answering tasks.
+
+</v-click>
+
+---
+layout: top-title
+color: violet
+---
+
+:: title ::
+
+# Evaluation: `Metrics`
 
 :: content ::
 
@@ -146,9 +193,9 @@ color: violet
 <v-clicks depth="1">
 
 * **Relevance (4):** ROUGE, BLEU, METEOR, and BERTScore.
-  * Measure **lexical overlap** and semantic similarity in embedding space.
+  * Measure **lexical overlap** and **semantic similarity** in embedding space.
 * **Readability (4):** Flesch-Kincaid Grade Level, Dale-Chall Readability Score, CLI, and LENS.
-  * Combine **surface features** (sentence length) with learned embeddings that correlate with human judgments.
+  * Combine **surface features** (sentence length) with **learned embeddings** that correlate with human judgments.
 * **Factuality (2):** AlignScore and SummaC.
   * Summary's span alignment with reference and entailment scores to flag contradictions or omissions.
 
@@ -161,21 +208,24 @@ color: violet
 
 :: title ::
 
-# Evaluation
+# Evaluation: `Final Score`
 
 :: content ::
 
-**Final Score =** Normalize scores by metric, average metrics for each criterion, and average across all criteria.
+(1) Normalize scores by metric, (2) average metrics for each criterion, and (3) average across all criteria.
+
+<div class="my-10"></div>
 
 ```mermaid {theme: 'default', nodeSpacing: 10, rankSpacing: 50}
 flowchart TB
-    R1([ROUGE]) & R2([BLEU]) & R3([METEOR]) & R4([BERTScore]) --> B1[Relevance]
-    D1([FKGL]) & D2([DCRS]) & D3([CLI]) & D4([LENS]) --> B2[Readability]
-    F1([AlignScore]) & F2([SummaC]) --> B3[Factuality]
-    B1 --> AV1((AVG))
-    B2 --> AV2((AVG))
-    B3 --> AV3((AVG))
-    AV1 & AV2 & AV3 --> Score
+    R1([ROUGE]) & R2([BLEU]) & R3([METEOR]) & R4([BERTScore]) --> AV1((AVG))
+    D1([FKGL]) & D2([DCRS]) & D3([CLI]) & D4([LENS]) --> AV2((AVG))
+    F1([AlignScore]) & F2([SummaC]) --> AV3((AVG))
+    AV1 --> B1[Relevance]
+    AV2 --> B2[Readability]
+    AV3 --> B3[Factuality]
+    B1 & B2 & B3 --> AV4((AVG))
+    AV4 --> Score
     
     classDef input fill:none,stroke:#000;
     classDef block fill:#e5e7eb,stroke:#111827;
@@ -195,22 +245,22 @@ color: violet
 
 :: content ::
 
-"Extract-then-abstract" pipeline without preprocessing.
+"Extract-then-abstract" pipeline.
 
 <v-clicks>
 
 - **Extract** 40 sentences using `TextRank` and `BioBERT`. 
-- Fine-tune Llama 3.1 Instruct using **extractive summaries** as input.
+- Fine-tuned Llama 3.1 Instruct (8B) using **extractive summaries** as input and **DoLa** for decoding.
 
-> **Instruction:** You are a specialist medical communicator responsible for translating biomedical articles into a clear, accurate 10–20 sentence summary for non-experts. The summary should be at a Flesch–Kincaid grade level of 10–14 and explain any technical terms.
+> **Instruction:** You are a specialist medical communicator responsible for translating biomedical articles into a clear, accurate 10–20 sentence summary for non-experts. The summary should be at a <ins>Flesch–Kincaid grade level of 10–14</ins> and explain any technical terms.
 
 <div class="mt-4"></div>
 
 ```mermaid {theme: 'default'}
 flowchart LR
-  input([Long Article<br/>+300 sentences])
-  extractive["**Extractive** summarizer<br/>TextRank + BioBERT"]
-  model("**Fine-tuned** Llama 3.1 Instruct")
+  input([Article<br/>+300 sentences])
+  extractive["**Extractive** Summarizer<br/>TextRank + BioBERT"]
+  model("**Fine-tuned** Llama")
   output([**Lay** summary])
 
   input --> extractive
@@ -247,7 +297,7 @@ Focus first on improving `factuality` scores.
 
 <v-clicks>
 
-  - **Extractive summaries** alone achieved top scores in factual accuracy.
+  - **Extractive summaries** alone achieved better scores `factuality` scores.
   - Focusing on 2 metrics is **simpler** than managing 4.
   - Potentially more **impactful** since `factuality` is averaged over 2 metrics rather than 4. 
 
@@ -263,14 +313,14 @@ Focus first on improving `factuality` scores.
 
 <v-click>
 
-"Let's just submit the abstracts"
+Previous research shows that <span v-mark.underline.red v-click="+0">abstracts</span> are highly relevant to the ground truth summary. 
 
 <div class="text-center">
 
 ```mermaid {theme: 'default'}
 flowchart LR
-  input([Long Article])
-  extractive[Extract **Abstract**]
+  input([Article])
+  extractive[**Abstract** Extraction]
   output([Summary])
 
   input --> extractive
@@ -282,7 +332,11 @@ flowchart LR
 
 </div>
 
+<v-click>
+
 Strong performance in `factuality`: AlignScore of **0.9908** and a SummaC score of **0.9528**.
+
+</v-click>
 
 </v-click>
 
@@ -301,12 +355,12 @@ Explore 3 **fine-tuning** experiments that combine the article's **abstract** wi
 
 <v-click>
 
-- Abstract only:
+<span class="font-serif font-bold">(I)</span> Abstract only:
 
 ```mermaid {theme: 'default'}
 flowchart LR
-  input([Long Article])
-  extractive[Extract **Abstract**]
+  input([Article])
+  extractive[**Abstract** Extraction]
   model(**Fine-tuned** Llama)
   output([**Lay** Summary])
 
@@ -322,13 +376,13 @@ flowchart LR
 
 <v-click>
 
-- Abstract concatenated with extractive summary:
+<span class="font-serif font-bold">(II)</span> Abstract concatenated with extractive summary:
 
 ```mermaid {theme: 'default'}
 flowchart LR
-  input([Long Article])
-  extractive[**Extractive** summarizer]
-  abstract[Extract **Abstract**]
+  input([Article])
+  extractive[**Extractive** Summarizer]
+  abstract[**Abstract** Extraction]
   concat((\+))
   model(**Fine-tuned** Llama)
   output([**Lay** Summary])
@@ -336,7 +390,7 @@ flowchart LR
   input --> abstract
   input --> extractive
   abstract -- "abstract" --> concat
-  extractive -- "40-sentence<br/>summary" --> concat
+  extractive -- "extractive summary" --> concat
   concat --> model
   model --> output
 
@@ -358,13 +412,13 @@ color: violet
 
 :: content ::
 
-- Abstract concatenated with extractive summary that **excluded** the abstract during extraction.
+<span class="font-serif font-bold">(III)</span> Abstract concatenated with extractive summary that **excluded** the abstract during extraction.
 
-```mermaid {theme: 'default'}
+```mermaid {theme: 'default', nodeSpacing:10, rankSpacing:30}
 flowchart LR
-  input([Long Article])
-  abstract[Extract **Abstract**]
-  extractive[**Extractive** summarizer]
+  input([Article])
+  abstract[**Abstract** Extraction]
+  extractive[**Extractive** Summarizer]
   concat((\+))
   remove((\-))
   model(**Fine-tuned** Llama)
@@ -375,7 +429,7 @@ flowchart LR
   abstract -- "abstract" --> remove
   abstract -- "abstract" --> concat
   remove --> extractive
-  extractive -- "40-sentence<br/>summary" --> concat
+  extractive -- "extractive summary" --> concat
   concat --> model
   model --> output
 
@@ -384,11 +438,183 @@ flowchart LR
   style extractive fill:none;
 ```
 
+---
+layout: top-title
+color: violet
+transition: view-transition
+---
+
+:: title ::
+
+# Model: `Interim`
+
+:: content ::
+
+<div class="text-center">
+
+Metric scores of the **interim** experiments on `eLife` validation
+
+</div>
+
+<div class="rounded overflow-clip border border-zinc-200">
+<table class="table-auto text-xs">
+    <thead>
+    <tr class="divide-x divide-zinc-300 bg-zinc-100">
+        <th class="text-center">MODEL</th>
+        <th class="text-center">K</th>
+        <th class="text-center" colspan="4">RELEVANCE</th>
+        <th class="text-center" colspan="4">READABILITY</th>
+        <th class="text-center" colspan="2">FACTUALITY</th>
+    </tr>
+    <tr class="bg-zinc-50">
+        <th></th>
+        <th></th>
+        <th class="font-light">ROUGE</th>
+        <th class="font-light">BLEU</th>
+        <th class="font-light">METEOR</th>
+        <th class="font-light">BertS</th>
+        <th class="font-light">FKGL</th>
+        <th class="font-light">DCRS</th>
+        <th class="font-light">CLI</th>
+        <th class="font-light">LENS</th>
+        <th class="font-light">AlignS</th>
+        <th class="font-light">SummaC</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+        <td>Our Baseline</td>
+        <td>40</td>
+        <td>0.3792</td>
+        <td>8.4205</td>
+        <td>0.2852</td>
+        <td><strong>0.8568</strong></td>
+        <td>9.0037</td>
+        <td><strong>7.5340</strong></td>
+        <td>10.0081</td>
+        <td>78.4724</td>
+        <td>0.6433</td>
+        <td>0.6453</td>
+    </tr>
+    <tr>
+        <td><span class="font-serif font-bold">(I)</span> Abs</td>
+        <td>--</td>
+        <td>0.3694</td>
+        <td>7.5316</td>
+        <td>0.2773</td>
+        <td>0.8541</td>
+        <td><strong>8.7827</strong></td>
+        <td>10.2781</td>
+        <td><strong>9.8029</strong></td>
+        <td><strong>79.4479</strong></td>
+        <td>0.6339</td>
+        <td><strong>0.6632</strong></td>
+    </tr>
+    <tr>
+        <td><span class="font-serif font-bold">(II)</span> Abs+Ext</td>
+        <td>40</td>
+        <td><strong>0.3818</strong></td>
+        <td><strong>8.6506</strong></td>
+        <td><strong>0.2966</strong></td>
+        <td>0.8552</td>
+        <td>8.9564</td>
+        <td>10.2320</td>
+        <td>9.9339</td>
+        <td>76.6738</td>
+        <td><strong>0.6458</strong></td>
+        <td>0.6082</td>
+    </tr>
+    <tr>
+        <td><span class="font-serif font-bold">(III)</span> Abs+Ext(abs)</td>
+        <td>30</td>
+        <td>0.3717</td>
+        <td>8.1089</td>
+        <td>0.2842</td>
+        <td>0.8537</td>
+        <td>9.0198</td>
+        <td>10.3763</td>
+        <td>9.9745</td>
+        <td>78.0254</td>
+        <td>0.6428</td>
+        <td>0.6433</td>
+    </tr>
+    </tbody>
+</table>
+</div>
+
+---
+layout: top-title
+color: violet
+---
+
+:: title ::
+
+# Model: `Interim`
+
+:: content ::
+
+<div class="text-center">
+
+**Normalized** scores of the **interim** experiments on `eLife` validation *(sorted)*
+
+</div>
+
+<div class="rounded overflow-clip border border-zinc-200">
+<table class="table-auto text-xs">
+    <thead>
+    <tr class="divide-x divide-zinc-300 bg-zinc-100">
+        <th class="text-center">MODEL</th>
+        <th class="text-center">K</th>
+        <th class="text-center">RELEVANCE</th>
+        <th class="text-center">READABILITY</th>
+        <th class="text-center">FACTUALITY</th>
+        <th class="text-center">SCORE</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+        <td>Our Baseline</td>
+        <td>40</td>
+        <td>0.906905</td>
+        <td><strong>0.958134</strong></td>
+        <td>0.361242</td>
+        <td><strong>0.742094</strong></td>
+    </tr>
+    <tr>
+        <td><span class="font-serif font-bold">(II)</span> Abs+Ext</td>
+        <td>40</td>
+        <td><strong>0.938622</strong></td>
+        <td>0.773277</td>
+        <td>0.319408</td>
+        <td>0.677102</td>
+    </tr>
+    <tr>
+        <td><span class="font-serif font-bold">(III)</span> Abs+Ext(abs)</td>
+        <td>30</td>
+        <td>0.856543</td>
+        <td>0.764911</td>
+        <td>0.358361</td>
+        <td>0.659939</td>
+    </tr>
+    <tr>
+        <td><span class="font-serif font-bold">(I)</span> Abs</td>
+        <td>--</td>
+        <td>0.815440</td>
+        <td>0.789736</td>
+        <td><strong>0.372712</strong></td>
+        <td>0.659296</td>
+    </tr>
+    </tbody>
+</table>
+</div>
+
 <v-click>
 
-—
+**Observations:**
 
-All these experiments performed **worse** than our baseline.
+1. All our interim experiments performed **worse** than our baseline.
+2. **Longer inputs** tend to perform better.
+3. Repeating relevant information appears to be helpful.
 
 </v-click>
 
@@ -403,7 +629,41 @@ color: violet
 
 :: content ::
 
-TODO
+Fine-tuned Llama 3.1 Instruct (8B) using the **entire article** text as input.
+
+<v-clicks>
+
+- **No** preprocessing or post-processing.
+- Apply Decoding by Contrasting Layers (**DoLa**) during inference.
+- Trained **one model per dataset** (`train` + `validation` splits), using a total of 30,735 articles.
+
+</v-clicks>
+
+<div class="text-center" v-click>
+
+```mermaid {theme: 'default'}
+flowchart LR
+  input([Article])
+  model("**Fine-tuned** Llama")
+  output([**Lay** summary])
+
+  input --> model
+  model --> output
+
+  style input fill:none,stroke:#000;
+```
+
+</div>
+
+<v-click>
+
+**Hyperparameters**
+
+- LoRA: $\text{rank}=8$, $\alpha=16$, $\text{dropout}=0.0$
+- Training: $\text{optimizer}=\text{adamw}$, $\alpha=3e^{-4}$, $\text{epoch}=2$
+- Inference: $\text{max\_new\_tokens}=384$, $\text{batch\_size}=1$, $\text{dola\_layers}=\{0,2,20\}$
+
+</v-click>
 
 ---
 layout: full
@@ -415,7 +675,125 @@ Final **pipeline** for rapid experimentation in summarization
 
 </div>
 
-<img src="/pipeline.png" class="h-full w-full object-contain pb-10 pt-4">
+<img src="/pipeline.png" class="h-full w-full object-contain pb-20 pt-4">
+
+---
+layout: top-title
+color: violet
+transition: view-transition
+---
+
+:: title ::
+
+# Results
+
+:: content ::
+
+<div class="text-center">
+
+Metric scores of the **final** experiments on `eLife` validation
+
+</div>
+
+<div class="rounded overflow-clip border border-zinc-200">
+<table class="table-auto text-xs">
+    <thead>
+    <tr class="divide-x divide-zinc-300 bg-zinc-100">
+        <th class="text-center">MODEL</th>
+        <th class="text-center">K</th>
+        <th class="text-center" colspan="4">RELEVANCE</th>
+        <th class="text-center" colspan="4">READABILITY</th>
+        <th class="text-center" colspan="2">FACTUALITY</th>
+    </tr>
+    <tr class="bg-zinc-50">
+        <th></th>
+        <th></th>
+        <th class="font-light">ROUGE</th>
+        <th class="font-light">BLEU</th>
+        <th class="font-light">METEOR</th>
+        <th class="font-light">BertS</th>
+        <th class="font-light">FKGL</th>
+        <th class="font-light">DCRS</th>
+        <th class="font-light">CLI</th>
+        <th class="font-light">LENS</th>
+        <th class="font-light">AlignS</th>
+        <th class="font-light">SummaC</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+        <td>Baseline</td>
+        <td>40</td>
+        <td>0.3792</td>
+        <td>8.4205</td>
+        <td>0.2852</td>
+        <td>0.8568</td>
+        <td>9.0037</td>
+        <td><strong>7.5340</strong></td>
+        <td>10.0081</td>
+        <td>78.4724</td>
+        <td>0.6433</td>
+        <td>0.6453</td>
+    </tr>
+    <tr>
+        <td>Abs</td>
+        <td>--</td>
+        <td>0.3694</td>
+        <td>7.5316</td>
+        <td>0.2773</td>
+        <td>0.8541</td>
+        <td>8.7827</td>
+        <td>10.2781</td>
+        <td><strong>9.8029</strong></td>
+        <td><strong>79.4479</strong></td>
+        <td>0.6339</td>
+        <td><strong>0.6632</strong></td>
+    </tr>
+    <tr>
+        <td>Abs<sub>pre</sub></td>
+        <td>--</td>
+        <td>0.3727</td>
+        <td>8.1257</td>
+        <td><strong>0.2890</strong></td>
+        <td>0.8532</td>
+        <td><strong>8.7326</strong></td>
+        <td>10.2495</td>
+        <td>9.8086</td>
+        <td>77.5272</td>
+        <td>0.6370</td>
+        <td>0.5990</td>
+    </tr>
+    <tr class="bg-yellow-100">
+        <td>Full-text</td>
+        <td>--</td>
+        <td><strong>0.3851</strong></td>
+        <td><strong>8.6941</strong></td>
+        <td>0.2887</td>
+        <td><strong>0.8591</strong></td>
+        <td>9.3079</td>
+        <td>7.6741</td>
+        <td>10.1434</td>
+        <td>78.6703</td>
+        <td>0.6432</td>
+        <td>0.6629</td>
+    </tr>
+    <tr>
+        <td>Full-text<sub>post</sub></td>
+        <td>--</td>
+        <td>0.3842</td>
+        <td>8.5227</td>
+        <td>0.2867</td>
+        <td>0.8587</td>
+        <td>9.3294</td>
+        <td>10.4553</td>
+        <td>10.1530</td>
+        <td>79.2063</td>
+        <td><strong>0.6444</strong></td>
+        <td>0.6616</td>
+    </tr>
+    </tbody>
+</table>
+</div>
 
 ---
 layout: top-title
@@ -428,7 +806,68 @@ color: violet
 
 :: content ::
 
-- TODO
+<div class="text-center">
+
+**Normalized** scores of the **final** experiments on `eLife` validation *(sorted)*
+
+</div>
+
+<div class="rounded overflow-clip border border-zinc-200">
+<table class="table-auto text-xs">
+    <thead>
+    <tr class="divide-x divide-zinc-300 bg-zinc-100">
+        <th class="text-center">MODEL</th>
+        <th class="text-center">K</th>
+        <th class="text-center">RELEVANCE</th>
+        <th class="text-center">READABILITY</th>
+        <th class="text-center">FACTUALITY</th>
+        <th class="text-center">SCORE</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr class="bg-yellow-100">
+        <td>Full-text</td>
+        <td>--</td>
+        <td>0.954173</td>
+        <td>0.935548</td>
+        <td>0.382233</td>
+        <td>0.757318</td>
+    </tr>
+    <tr>
+        <td>Our Baseline</td>
+        <td>40</td>
+        <td>0.906905</td>
+        <td><strong>0.958134</strong></td>
+        <td>0.361242</td>
+        <td><strong>0.742094</strong></td>
+    </tr>
+    <tr>
+        <td>Abs</td>
+        <td>--</td>
+        <td>0.815440</td>
+        <td>0.789736</td>
+        <td><strong>0.372712</strong></td>
+        <td>0.659296</td>
+    </tr>
+    <tr>
+        <td>Abs<sub>pre</sub></td>
+        <td>--</td>
+        <td>0.868276</td>
+        <td>0.786174</td>
+        <td>0.299148</td>
+        <td>0.651199</td>
+    </tr>
+    <tr>
+        <td>Full-text<sub>post</sub></td>
+        <td>--</td>
+        <td>0.3842</td>
+        <td>8.5227</td>
+        <td>0.2867</td>
+        <td>0.8587</td>
+    </tr>
+    </tbody>
+</table>
+</div>
 
 ---
 layout: top-title
@@ -437,7 +876,65 @@ color: violet
 
 :: title ::
 
-# Discussion
+# Results
+
+:: content ::
+
+<div class="text-center">
+
+**Normalized** scores of the **decoding** experiments on `eLife` validation.
+
+</div>
+
+<div class="rounded overflow-clip border border-zinc-200">
+<table class="table-auto text-xs">
+    <thead>
+    <tr class="divide-x divide-zinc-300 bg-zinc-100">
+        <th class="text-center">MODEL</th>
+        <th class="text-center">K</th>
+        <th class="text-center">RELEVANCE</th>
+        <th class="text-center">READABILITY</th>
+        <th class="text-center">FACTUALITY</th>
+        <th class="text-center">SCORE</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+        <td>DoLa</td>
+        <td>40</td>
+        <td>0.906905</td>
+        <td><strong>0.958134</strong></td>
+        <td>0.361242</td>
+        <td><strong>0.742094</strong></td>
+    </tr>
+    <tr>
+        <td>Greedy decoding</td>
+        <td>40</td>
+        <td><strong>0.938622</strong></td>
+        <td>0.773277</td>
+        <td>0.319408</td>
+        <td>0.677102</td>
+    </tr>
+    <tr>
+        <td>Beam search</td>
+        <td>30</td>
+        <td>0.856543</td>
+        <td>0.764911</td>
+        <td>0.358361</td>
+        <td>0.659939</td>
+    </tr>
+    </tbody>
+</table>
+</div>
+
+---
+layout: top-title
+color: violet
+---
+
+:: title ::
+
+# Conclusions
 
 :: content ::
 
@@ -449,4 +946,4 @@ layout: center
 
 # Questions?
 
-Parts of this work was/were completed on Hyak, UW's high-performance computing cluster. This resource was funded by the Student Technology Fee.
+Parts of this work were completed on Hyak, UW's high-performance computing cluster. This resource was funded by the Student Technology Fee.
