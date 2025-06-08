@@ -182,7 +182,7 @@ class ModelTuner:
             cmd = [
                 "tune", "download",
                 model,
-                "--hf-token", hf_token,
+                "--hf-token", str(hf_token),
                 "--output-dir", model_path,
                 "--ignore-patterns", "original/consolidated.00.pth",
             ]
