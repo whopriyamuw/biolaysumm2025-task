@@ -18,7 +18,7 @@ fast Python package and project manager, written in Rust.
    ```sh
    # With conda:
    conda create -n suwmit python=3.11.0
-   conda active suwmit
+   conda activate suwmit
    # With uv:
    uv venv 
    source .venv/bin/activate
