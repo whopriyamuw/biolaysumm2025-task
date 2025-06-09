@@ -342,7 +342,7 @@ class ModelTuner:
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Script for fine-tuning LLaMa 3 Instruct models.")
+    parser = argparse.ArgumentParser(description="Script for fine-tuning Llama 3 Instruct models.")
 
     # Dataset arguments
     # Dataset to use
