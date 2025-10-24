@@ -101,7 +101,7 @@ The extractive summaries will be saved in the `data/processed/extractive` direct
    ```sh
    # Hugging Face  
    export HF_HOME="/gscratch/scrubbed/USERNAME/.cache/huggingface/hub"  
-   export HF_TOKEN=YOUR_HF_TOKEN # Needed for downloading LLaMa 3 weights; request access on HuggingFace first
+   export HF_TOKEN=YOUR_HF_TOKEN # Needed for downloading Llama 3 weights; request access on HuggingFace first
    ```
 
 4. **Create a Conda configuration file**:
@@ -151,8 +151,8 @@ The extractive summaries will be saved in the `data/processed/extractive` direct
 
 ### Inference for Abstractive Summarization
 
-The inference module supports two execution modes: running the base LLaMa 3.1 8B Instruct model with
-zero-shot prompting and executing a fine-tuned version of the same LLaMa model by loading its
+The inference module supports two execution modes: running the base Llama 3.1 8B Instruct model with
+zero-shot prompting and executing a fine-tuned version of the same Llama model by loading its
 adapter weights.
 
 To run the **base model**, use the following command and specify the arguments detailed below.
